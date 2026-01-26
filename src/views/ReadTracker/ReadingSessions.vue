@@ -133,18 +133,26 @@
         </div>
       </div>
     </div>
+
+    <!-- Add Session Prompt -->
+    <AddSessionPrompt
+      v-if="showPrompt"
+      @confirm="handlePromptConfirm"
+      @cancel="handlePromptCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReadingSessionsStore } from '@/stores/readingSessions'
 import { useBooksStore } from '@/stores/books'
 import ReadingSessionForm from '@/components/ReadTracker/ReadingSessionForm.vue'
+import AddSessionPrompt from '@/components/ReadTracker/AddSessionPrompt.vue'
 import type { ReadingSession } from '@/firebase/firestore'
 import { Timestamp } from 'firebase/firestore'
-import { format, isToday, isThisWeek, isThisMonth, isThisYear } from 'date-fns'
+import { format, isToday, isThisWeek, isThisMonth, isThisYear, format as formatDate } from 'date-fns'
 
 const { t, locale } = useI18n()
 
@@ -154,12 +162,111 @@ const booksStore = useBooksStore()
 const showForm = ref(false)
 const editingSession = ref<ReadingSession | null>(null)
 const dateFilter = ref('all')
+const showPrompt = ref(false)
+
+// Check if there's a session for today
+const hasSessionToday = computed(() => {
+  return sessionsStore.sessions.some(session => 
+    session.date && isToday(session.date.toDate())
+  )
+})
+
+// Check if prompt was already shown today (stored in localStorage)
+const getPromptShownKey = (): string => {
+  const today = formatDate(new Date(), 'yyyy-MM-dd')
+  return `sessionPromptShown_${today}`
+}
 
 // Fetch data on mount
 onMounted(async () => {
   await sessionsStore.fetchSessions()
   await booksStore.fetchBooks()
+  
+  // Check if we should show the prompt
+  checkAndShowPrompt()
 })
+
+// Watch for session changes to hide prompt if session is added
+watch(() => sessionsStore.sessions, () => {
+  if (hasSessionToday.value && showPrompt.value) {
+    showPrompt.value = false
+  }
+}, { deep: true })
+
+const checkAndShowPrompt = () => {
+  // Only show if no session today and prompt hasn't been shown today
+  const promptKey = getPromptShownKey()
+  const wasShown = localStorage.getItem(promptKey) === 'true'
+  
+  if (!hasSessionToday.value && !wasShown && sessionsStore.sessions.length > 0) {
+    // Small delay to let the page render first
+    setTimeout(() => {
+      showPrompt.value = true
+    }, 1000)
+  }
+}
+
+// Get last session for creating similar session
+const getLastSession = (): ReadingSession | null => {
+  if (sessionsStore.sessions.length === 0) return null
+  const sorted = [...sessionsStore.sessions]
+    .filter(s => s.date)
+    .sort((a, b) => b.date!.toDate().getTime() - a.date!.toDate().getTime())
+  return sorted[0] || null
+}
+
+// Handle prompt confirmation - create session similar to last one
+const handlePromptConfirm = async () => {
+  const lastSession = getLastSession()
+  if (!lastSession) {
+    // If no last session, just open the form
+    showPrompt.value = false
+    showForm.value = true
+    return
+  }
+  
+  try {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    // Create start time (default to 9 AM)
+    const startDateTime = new Date(today)
+    startDateTime.setHours(9, 0, 0, 0)
+    
+    // Calculate end time based on last session's duration
+    const endDateTime = new Date(startDateTime)
+    endDateTime.setMinutes(endDateTime.getMinutes() + (lastSession.duration || 0))
+    
+    const sessionData: Omit<ReadingSession, 'id' | 'createdAt'> = {
+      date: Timestamp.fromDate(today),
+      startTime: Timestamp.fromDate(startDateTime),
+      endTime: Timestamp.fromDate(endDateTime),
+      duration: lastSession.duration || 0,
+      ...(lastSession.bookId && { bookId: lastSession.bookId })
+    }
+    
+    await sessionsStore.createSession(sessionData)
+    
+    // Mark prompt as shown for today
+    const promptKey = getPromptShownKey()
+    localStorage.setItem(promptKey, 'true')
+    
+    showPrompt.value = false
+  } catch (error) {
+    console.error('Error creating session:', error)
+    // On error, just close the prompt and open the form
+    showPrompt.value = false
+    showForm.value = true
+  }
+}
+
+// Handle prompt cancellation
+const handlePromptCancel = () => {
+  // Mark prompt as shown for today so it doesn't show again
+  const promptKey = getPromptShownKey()
+  localStorage.setItem(promptKey, 'true')
+  showPrompt.value = false
+}
 
 // Calculate today's total reading time
 const todayTotalMinutes = computed(() => {

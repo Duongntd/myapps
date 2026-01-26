@@ -106,6 +106,11 @@
     "durationRequired": "Reading time must be greater than 0",
     "saveError": "Failed to save session. Please try again."
   },
+  "sessionPrompt": {
+    "title": "Add Reading Session?",
+    "message": "You haven't added a reading session today. Would you like to add one now?",
+    "addSession": "Add Session"
+  },
   "books": {
     "title": "My Books",
     "addBook": "Add Book",

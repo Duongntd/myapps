@@ -120,6 +120,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useReadingSessionsStore } from '@/stores/readingSessions'
 import { useBooksStore } from '@/stores/books'
+import { useGoalsStore } from '@/stores/goals'
 import type { ReadingSession } from '@/firebase/firestore'
 import { Timestamp } from 'firebase/firestore'
 import { format } from 'date-fns'
@@ -141,6 +142,7 @@ const { t } = useI18n()
 
 const sessionsStore = useReadingSessionsStore()
 const booksStore = useBooksStore()
+const goalsStore = useGoalsStore()
 
 const loading = ref(false)
 const submitError = ref('')
@@ -166,8 +168,32 @@ const readingBooks = computed(() => {
   return booksStore.books.filter(book => book.status === 'reading')
 })
 
+// Get the last session for smart defaults
+const getLastSession = (): ReadingSession | null => {
+  if (sessionsStore.sessions.length === 0) return null
+  const sorted = [...sessionsStore.sessions]
+    .filter(s => s.date)
+    .sort((a, b) => b.date!.toDate().getTime() - a.date!.toDate().getTime())
+  return sorted[0] || null
+}
+
+// Get daily goal for smart defaults
+const getDailyGoal = () => {
+  return goalsStore.goals.find(goal => goal.type === 'daily')
+}
+
+// Get currently reading book
+const getCurrentReadingBook = () => {
+  return readingBooks.value[0] || null
+}
+
 // Initialize form with session data if editing
-onMounted(() => {
+onMounted(async () => {
+  // Fetch goals if not already loaded
+  if (goalsStore.goals.length === 0) {
+    await goalsStore.fetchGoals()
+  }
+  
   if (editingSession.value) {
     const session = editingSession.value
     if (session.date) {
@@ -181,8 +207,32 @@ onMounted(() => {
   } else {
     // Default to today
     formData.value.date = format(new Date(), 'yyyy-MM-dd')
-    formData.value.hours = 0
-    formData.value.minutes = 0
+    
+    // Smart defaults: Use daily goal duration, or last session duration, or 0
+    const dailyGoal = getDailyGoal()
+    const lastSession = getLastSession()
+    const currentBook = getCurrentReadingBook()
+    
+    let defaultDuration = 0
+    if (dailyGoal && dailyGoal.targetMinutes > 0) {
+      // Use daily goal as default
+      defaultDuration = dailyGoal.targetMinutes
+    } else if (lastSession && lastSession.duration) {
+      // Use last session duration as fallback
+      defaultDuration = lastSession.duration
+    }
+    
+    formData.value.hours = Math.floor(defaultDuration / 60)
+    formData.value.minutes = defaultDuration % 60
+    
+    // Smart default for book: Use currently reading book, or last session's book
+    if (currentBook) {
+      formData.value.bookId = currentBook.id || ''
+    } else if (lastSession && lastSession.bookId) {
+      formData.value.bookId = lastSession.bookId
+    } else {
+      formData.value.bookId = ''
+    }
   }
 })
 
