@@ -217,6 +217,12 @@
     "releaseDate": "Ngày phát hành",
     "releaseNotes": "Ghi chú phát hành"
   },
+  "readTrackerSettings": {
+    "subtitle": "Cài đặt cụ thể cho Read Tracker",
+    "about": "Giới thiệu Read Tracker",
+    "readTrackerSettings": "Cài đặt Read Tracker",
+    "comingSoon": "Các cài đặt cụ thể cho Read Tracker sẽ có sẵn ở đây trong các phiên bản tương lai."
+  },
   "language": {
     "selectLanguage": "Chọn ngôn ngữ",
     "english": "Tiếng Anh",

@@ -10,6 +10,12 @@ const routes: RouteRecordRaw[] = [
     component: Home
   },
   {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('@/views/Settings.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/read-tracker',
     component: ReadTrackerLayout,
     meta: { requiresAuth: true },
