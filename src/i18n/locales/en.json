@@ -15,7 +15,8 @@
     "tryAgain": "Try again",
     "signOut": "Sign out",
     "signIn": "Sign in",
-    "signInWithGoogle": "Sign in with Google"
+    "signInWithGoogle": "Sign in with Google",
+    "actions": "Actions"
   },
   "app": {
     "name": "MyApps",
@@ -31,10 +32,57 @@
     "goals": "Goals",
     "settings": "Settings"
   },
+  "portfolioTracker": {
+    "title": "📈 Portfolio Tracker",
+    "subtitle": "Manage your stock portfolio and track your investments",
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "settings": "Settings",
+    "totalValue": "Total Value",
+    "totalCost": "Total Cost",
+    "totalNAV": "Total NAV",
+    "holdings": "holdings",
+    "averagePrice": "Average price",
+    "myHoldings": "My Holdings",
+    "symbol": "Symbol",
+    "quantity": "Quantity",
+    "avgPrice": "Avg Price",
+    "currentPrice": "Current Price",
+    "currentValue": "Current Value",
+    "nav": "NAV",
+    "navPercent": "NAV %",
+    "refreshPrices": "Refresh Prices",
+    "refreshing": "Refreshing...",
+    "loading": "Loading...",
+    "noHoldings": "No holdings yet. Add your first transaction to get started!",
+    "addFirstTransaction": "Add First Transaction",
+    "addTransaction": "Add Transaction",
+    "transactionType": "Transaction Type",
+    "buy": "Buy",
+    "sell": "Sell",
+    "pricePerShare": "Price per Share",
+    "date": "Date",
+    "type": "Type",
+    "price": "Price",
+    "total": "Total",
+    "noTransactions": "No transactions yet. Add your first transaction to get started!",
+    "symbolRequired": "Symbol is required",
+    "quantityRequired": "Quantity must be greater than 0",
+    "priceRequired": "Price must be greater than 0",
+    "transactionError": "Failed to create transaction. Please try again.",
+    "deleteConfirm": "Are you sure you want to delete this transaction?",
+    "deleteError": "Failed to delete transaction. Please try again.",
+    "settingsDesc": "Portfolio Tracker specific settings will be available here in future releases."
+  },
   "home": {
     "readTracker": {
       "name": "Read Tracker",
       "description": "Track your reading time, manage books, set goals, and build better reading habits.",
+      "openApp": "Open App"
+    },
+    "portfolioTracker": {
+      "name": "Portfolio Tracker",
+      "description": "Manage your stock portfolio, track live prices, and monitor your investment performance.",
       "openApp": "Open App"
     },
     "signIn": {

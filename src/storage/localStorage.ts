@@ -2,12 +2,14 @@
 // Mimics Firestore API structure for easy switching between Firebase and localStorage
 
 import type { Timestamp } from 'firebase/firestore'
-import type { Book, ReadingSession, Goal } from '@/firebase/firestore'
+import type { Book, ReadingSession, Goal, StockHolding, Transaction } from '@/firebase/firestore'
 
 const STORAGE_KEYS = {
   BOOKS: 'readTracker_books',
   SESSIONS: 'readTracker_sessions',
-  GOALS: 'readTracker_goals'
+  GOALS: 'readTracker_goals',
+  STOCK_HOLDINGS: 'portfolioTracker_holdings',
+  TRANSACTIONS: 'portfolioTracker_transactions'
 }
 
 // Helper to convert Timestamp-like objects to proper format
@@ -244,6 +246,131 @@ export const deleteGoal = async (goalId: string): Promise<void> => {
     localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(filtered))
   } catch (error) {
     console.error('Error deleting goal from localStorage:', error)
+    throw error
+  }
+}
+
+// Stock Holdings
+export const getStockHoldings = async (): Promise<StockHolding[]> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.STOCK_HOLDINGS)
+    if (!stored) return []
+    
+    const holdings: StockHolding[] = JSON.parse(stored)
+    const normalized = holdings.map(holding => 
+      normalizeTimestamps(holding, ['createdAt', 'updatedAt'])
+    )
+    return normalized.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0
+      const dateA = timestampToDate(a.createdAt)
+      const dateB = timestampToDate(b.createdAt)
+      return dateB.getTime() - dateA.getTime()
+    })
+  } catch (error) {
+    console.error('Error loading stock holdings from localStorage:', error)
+    return []
+  }
+}
+
+export const addStockHolding = async (holdingData: Omit<StockHolding, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ id: string }> => {
+  try {
+    const holdings = await getStockHoldings()
+    const newHolding: StockHolding = {
+      ...holdingData,
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: toTimestamp(new Date()),
+      updatedAt: toTimestamp(new Date())
+    }
+    
+    holdings.push(newHolding)
+    localStorage.setItem(STORAGE_KEYS.STOCK_HOLDINGS, JSON.stringify(holdings))
+    
+    return { id: newHolding.id! }
+  } catch (error) {
+    console.error('Error adding stock holding to localStorage:', error)
+    throw error
+  }
+}
+
+export const updateStockHolding = async (holdingId: string, updates: Partial<StockHolding>): Promise<void> => {
+  try {
+    const holdings = await getStockHoldings()
+    const index = holdings.findIndex(h => h.id === holdingId)
+    
+    if (index === -1) {
+      throw new Error('Holding not found')
+    }
+    
+    holdings[index] = { 
+      ...holdings[index], 
+      ...updates,
+      updatedAt: toTimestamp(new Date())
+    }
+    localStorage.setItem(STORAGE_KEYS.STOCK_HOLDINGS, JSON.stringify(holdings))
+  } catch (error) {
+    console.error('Error updating stock holding in localStorage:', error)
+    throw error
+  }
+}
+
+export const deleteStockHolding = async (holdingId: string): Promise<void> => {
+  try {
+    const holdings = await getStockHoldings()
+    const filtered = holdings.filter(h => h.id !== holdingId)
+    localStorage.setItem(STORAGE_KEYS.STOCK_HOLDINGS, JSON.stringify(filtered))
+  } catch (error) {
+    console.error('Error deleting stock holding from localStorage:', error)
+    throw error
+  }
+}
+
+// Transactions
+export const getTransactions = async (): Promise<Transaction[]> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS)
+    if (!stored) return []
+    
+    const transactions: Transaction[] = JSON.parse(stored)
+    const normalized = transactions.map(transaction => 
+      normalizeTimestamps(transaction, ['date', 'createdAt'])
+    )
+    return normalized.sort((a, b) => {
+      const dateA = timestampToDate(a.date)
+      const dateB = timestampToDate(b.date)
+      return dateB.getTime() - dateA.getTime()
+    })
+  } catch (error) {
+    console.error('Error loading transactions from localStorage:', error)
+    return []
+  }
+}
+
+export const addTransaction = async (transactionData: Omit<Transaction, 'id' | 'createdAt'>): Promise<{ id: string }> => {
+  try {
+    const transactions = await getTransactions()
+    const newTransaction: Transaction = {
+      ...transactionData,
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: toTimestamp(new Date())
+    }
+    
+    transactions.push(newTransaction)
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions))
+    
+    return { id: newTransaction.id! }
+  } catch (error) {
+    console.error('Error adding transaction to localStorage:', error)
+    throw error
+  }
+}
+
+export const deleteTransaction = async (transactionId: string): Promise<void> => {
+  try {
+    const transactions = await getTransactions()
+    const filtered = transactions.filter(t => t.id !== transactionId)
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(filtered))
+  } catch (error) {
+    console.error('Error deleting transaction from localStorage:', error)
     throw error
   }
 }

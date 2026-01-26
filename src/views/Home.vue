@@ -57,8 +57,14 @@ const apps = ref<App[]>([
     description: t('home.readTracker.description'),
     icon: '📚',
     route: '/read-tracker'
+  },
+  {
+    id: 'portfolio-tracker',
+    name: t('home.portfolioTracker.name'),
+    description: t('home.portfolioTracker.description'),
+    icon: '📈',
+    route: '/portfolio-tracker'
   }
-  // More apps can be added here in the future
 ])
 
 const navigateToApp = (route: string): void => {

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import Home from '@/views/Home.vue'
 import ReadTrackerLayout from '@/views/ReadTracker/ReadTrackerLayout.vue'
+import PortfolioTrackerLayout from '@/views/PortfolioTracker/PortfolioTrackerLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
@@ -49,6 +50,33 @@ const routes: RouteRecordRaw[] = [
         path: 'settings',
         name: 'read-tracker-settings',
         component: () => import('@/views/ReadTracker/Settings.vue')
+      }
+    ]
+  },
+  {
+    path: '/portfolio-tracker',
+    component: PortfolioTrackerLayout,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'portfolio-tracker',
+        redirect: '/portfolio-tracker/dashboard'
+      },
+      {
+        path: 'dashboard',
+        name: 'portfolio-tracker-dashboard',
+        component: () => import('@/views/PortfolioTracker/Dashboard.vue')
+      },
+      {
+        path: 'transactions',
+        name: 'portfolio-tracker-transactions',
+        component: () => import('@/views/PortfolioTracker/Transactions.vue')
+      },
+      {
+        path: 'settings',
+        name: 'portfolio-tracker-settings',
+        component: () => import('@/views/PortfolioTracker/Settings.vue')
       }
     ]
   }
