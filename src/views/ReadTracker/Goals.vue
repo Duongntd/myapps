@@ -4,8 +4,8 @@
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
         <div>
-          <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Reading Goals</h2>
-          <p class="text-xs sm:text-sm text-gray-600 mt-1">Set and track your reading goals</p>
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $t('goals.title') }}</h2>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1">{{ $t('goals.subtitle') }}</p>
         </div>
         <button
           @click="showForm = true"
@@ -14,7 +14,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span>Add Goal</span>
+          <span>{{ $t('goals.addGoal') }}</span>
         </button>
       </div>
     </div>
@@ -30,7 +30,7 @@
     <!-- Active Goals -->
     <div class="bg-white rounded-lg shadow">
       <div class="p-4 sm:p-6 border-b border-gray-200">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-900">Active Goals</h3>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">{{ $t('goals.activeGoals') }}</h3>
       </div>
 
       <!-- Error State -->
@@ -40,13 +40,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div class="flex-1">
-            <p class="text-sm font-medium text-red-800">Error loading goals</p>
+            <p class="text-sm font-medium text-red-800">{{ $t('goals.errorLoading') }}</p>
             <p class="text-xs sm:text-sm text-red-600 mt-1">{{ goalsStore.error }}</p>
             <button
               @click="goalsStore.fetchGoals()"
               class="mt-2 text-xs sm:text-sm text-red-700 underline hover:text-red-800"
             >
-              Try again
+              {{ $t('common.tryAgain') }}
             </button>
           </div>
         </div>
@@ -55,19 +55,19 @@
       <!-- Loading State -->
       <div v-if="goalsStore.loading" class="p-8 sm:p-12 text-center">
         <div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-        <p class="text-sm sm:text-base text-gray-600">Loading goals...</p>
+        <p class="text-sm sm:text-base text-gray-600">{{ $t('goals.loadingGoals') }}</p>
       </div>
 
       <!-- Empty State -->
       <div v-else-if="activeGoals.length === 0" class="p-8 sm:p-12 text-center">
         <div class="text-5xl sm:text-6xl mb-4">🎯</div>
-        <p class="text-gray-600 text-base sm:text-lg mb-2">No active goals</p>
-        <p class="text-gray-500 text-sm mb-4">Set a reading goal to track your progress!</p>
+        <p class="text-gray-600 text-base sm:text-lg mb-2">{{ $t('goals.noActiveGoals') }}</p>
+        <p class="text-gray-500 text-sm mb-4">{{ $t('goals.noActiveGoalsDesc') }}</p>
         <button
           @click="showForm = true"
           class="bg-primary-600 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors touch-manipulation"
         >
-          Create Your First Goal
+          {{ $t('goals.createFirstGoal') }}
         </button>
       </div>
 
@@ -82,7 +82,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 <h4 class="text-base sm:text-lg font-semibold text-gray-900">
-                  {{ formatGoalType(goal.type) }} Goal
+                  {{ formatGoalType(goal.type) }} {{ $t('goals.goal') }}
                 </h4>
                 <span
                   :class="[
@@ -122,7 +122,7 @@
           <!-- Progress Bar -->
           <div class="mb-2">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 mb-1">
-              <span class="text-xs sm:text-sm text-gray-600">Progress</span>
+              <span class="text-xs sm:text-sm text-gray-600">{{ $t('goals.progress') }}</span>
               <span class="text-xs sm:text-sm font-semibold text-gray-900">
                 {{ formatDuration(goalProgress(goal).current) }} / {{ formatDuration(goal.targetMinutes) }}
                 ({{ Math.round(goalProgress(goal).percentage) }}%)
@@ -142,10 +142,10 @@
           <!-- Remaining Time -->
           <p class="text-xs text-gray-500">
             {{ goalProgress(goal).remaining > 0 
-              ? `${formatDuration(goalProgress(goal).remaining)} remaining` 
+              ? `${formatDuration(goalProgress(goal).remaining)} ${t('goals.remaining')}` 
               : goalProgress(goal).percentage >= 100 
-                ? '🎉 Goal completed!' 
-                : 'Goal exceeded!' }}
+                ? t('goals.goalCompleted') 
+                : t('goals.goalExceeded') }}
           </p>
         </div>
       </div>
@@ -155,6 +155,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGoalsStore } from '@/stores/goals'
 import { useReadingSessionsStore } from '@/stores/readingSessions'
 import GoalForm from '@/components/ReadTracker/GoalForm.vue'
@@ -170,6 +171,8 @@ import {
   getWeek,
   getYear
 } from 'date-fns'
+
+const { t } = useI18n()
 
 const goalsStore = useGoalsStore()
 const sessionsStore = useReadingSessionsStore()
@@ -242,13 +245,13 @@ const goalProgress = (goal: Goal) => {
 const getGoalStatus = (goal: Goal): string => {
   const progress = goalProgress(goal)
   if (progress.percentage >= 100) {
-    return 'Completed'
+    return t('goals.status.completed')
   } else if (progress.percentage >= 75) {
-    return 'Almost There'
+    return t('goals.status.almostThere')
   } else if (progress.percentage >= 50) {
-    return 'On Track'
+    return t('goals.status.onTrack')
   } else {
-    return 'In Progress'
+    return t('goals.status.inProgress')
   }
 }
 
@@ -282,22 +285,22 @@ const handleSaveGoal = async () => {
 }
 
 const deleteGoal = async (goalId: string) => {
-  if (confirm('Are you sure you want to delete this goal?')) {
+  if (confirm(t('goals.deleteConfirm'))) {
     try {
       await goalsStore.removeGoal(goalId)
     } catch (error) {
       console.error('Error deleting goal:', error)
-      alert('Failed to delete goal. Please try again.')
+      alert(t('goals.deleteError'))
     }
   }
 }
 
 const formatGoalType = (type: string): string => {
   const typeMap: Record<string, string> = {
-    daily: 'Daily',
-    weekly: 'Weekly',
-    monthly: 'Monthly',
-    yearly: 'Yearly'
+    daily: t('goals.types.daily'),
+    weekly: t('goals.types.weekly'),
+    monthly: t('goals.types.monthly'),
+    yearly: t('goals.types.yearly')
   }
   return typeMap[type] || type
 }

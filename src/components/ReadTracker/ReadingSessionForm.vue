@@ -3,7 +3,7 @@
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
       <div class="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
         <h3 class="text-lg sm:text-xl font-semibold text-gray-900">
-          {{ editingSession ? 'Edit Session' : 'Add Session' }}
+          {{ editingSession ? $t('sessionForm.editSession') : $t('sessionForm.addSession') }}
         </h3>
         <button
           @click="$emit('close')"
@@ -20,7 +20,7 @@
         <!-- Date -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Date <span class="text-red-500">*</span>
+            {{ $t('sessionForm.date') }} <span class="text-red-500">*</span>
           </label>
           <input
             v-model="formData.date"
@@ -34,11 +34,11 @@
         <!-- Reading Duration -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Reading Time <span class="text-red-500">*</span>
+            {{ $t('sessionForm.readingTime') }} <span class="text-red-500">*</span>
           </label>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Hours</label>
+              <label class="block text-xs text-gray-500 mb-1">{{ $t('sessionForm.hours') }}</label>
               <input
                 v-model.number="formData.hours"
                 type="number"
@@ -50,7 +50,7 @@
               />
             </div>
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Minutes</label>
+              <label class="block text-xs text-gray-500 mb-1">{{ $t('sessionForm.minutes') }}</label>
               <input
                 v-model.number="formData.minutes"
                 type="number"
@@ -63,7 +63,7 @@
             </div>
           </div>
           <p v-if="totalMinutes > 0" class="mt-2 text-sm text-gray-600">
-            Total: {{ formatDuration(totalMinutes) }}
+            {{ $t('sessionForm.total') }}: {{ formatDuration(totalMinutes) }}
           </p>
           <p v-if="errors.duration" class="mt-1 text-sm text-red-600">{{ errors.duration }}</p>
         </div>
@@ -71,19 +71,19 @@
         <!-- Book Selection (Optional) -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Book (Optional)
+            {{ $t('sessionForm.bookOptional') }}
           </label>
           <select
             v-model="formData.bookId"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="">No book selected</option>
+            <option value="">{{ $t('sessionForm.noBookSelected') }}</option>
             <option
               v-for="book in readingBooks"
               :key="book.id"
               :value="book.id"
             >
-              {{ book.title }} by {{ book.author }}
+              {{ book.title }} {{ $t('sessionForm.by') }} {{ book.author }}
             </option>
           </select>
         </div>
@@ -100,14 +100,14 @@
             @click="$emit('close')"
             class="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation"
           >
-            Cancel
+            {{ $t('common.cancel') }}
           </button>
           <button
             type="submit"
             :disabled="loading"
             class="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           >
-            {{ loading ? 'Saving...' : (editingSession ? 'Update Session' : 'Add Session') }}
+            {{ loading ? $t('common.saving') : (editingSession ? $t('sessionForm.updateSession') : $t('sessionForm.addSession')) }}
           </button>
         </div>
       </form>
@@ -117,6 +117,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useReadingSessionsStore } from '@/stores/readingSessions'
 import { useBooksStore } from '@/stores/books'
 import type { ReadingSession } from '@/firebase/firestore'
@@ -135,6 +136,8 @@ const emit = defineEmits<{
   close: []
   save: []
 }>()
+
+const { t } = useI18n()
 
 const sessionsStore = useReadingSessionsStore()
 const booksStore = useBooksStore()
@@ -186,7 +189,7 @@ onMounted(() => {
 // Watch for changes to validate
 watch([() => formData.value.hours, () => formData.value.minutes], () => {
   if (totalMinutes.value <= 0) {
-    errors.value.duration = 'Reading time must be greater than 0'
+    errors.value.duration = t('sessionForm.durationRequired')
   } else {
     delete errors.value.duration
   }
@@ -196,11 +199,11 @@ const validateForm = (): boolean => {
   errors.value = {}
 
   if (!formData.value.date) {
-    errors.value.date = 'Date is required'
+    errors.value.date = t('sessionForm.dateRequired')
   }
 
   if (totalMinutes.value <= 0) {
-    errors.value.duration = 'Reading time must be greater than 0'
+    errors.value.duration = t('sessionForm.durationRequired')
   }
 
   return Object.keys(errors.value).length === 0
@@ -257,7 +260,7 @@ const handleSubmit = async () => {
     emit('save')
   } catch (error) {
     console.error('Error saving session:', error)
-    submitError.value = 'Failed to save session. Please try again.'
+    submitError.value = t('sessionForm.saveError')
   } finally {
     loading.value = false
   }
@@ -265,10 +268,10 @@ const handleSubmit = async () => {
 
 const formatDuration = (minutes: number): string => {
   if (minutes < 60) {
-    return `${minutes} minutes`
+    return `${minutes} ${t('sessionForm.minutes')}`
   }
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
-  return mins > 0 ? `${hours} hour${hours > 1 ? 's' : ''} ${mins} minute${mins !== 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''}`
+  return mins > 0 ? `${hours} ${t('sessionForm.hours')} ${mins} ${t('sessionForm.minutes')}` : `${hours} ${t('sessionForm.hours')}`
 }
 </script>

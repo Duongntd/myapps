@@ -1,11 +1,11 @@
 <template>
   <div class="w-full">
     <div class="mb-4 sm:mb-6 lg:mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">📚 Read Tracker</h1>
-      <p class="text-sm sm:text-base text-gray-600">Track your reading time and build better reading habits</p>
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{{ $t('readTracker.title') }}</h1>
+      <p class="text-sm sm:text-base text-gray-600">{{ $t('readTracker.subtitle') }}</p>
     </div>
     
-    <nav class="flex gap-1 sm:gap-2 mb-4 sm:mb-6 lg:mb-8 border-b-2 border-gray-200 overflow-x-auto scrollbar-hide -mx-3 sm:mx-0 px-3 sm:px-0">
+    <nav class="flex gap-1 sm:gap-2 mb-4 sm:mb-6 lg:mb-8 border-b-2 border-gray-200 overflow-x-auto scrollbar-hide -mx-3 sm:mx-0 px-3 sm:px-0" :key="locale">
       <router-link
         v-for="item in navItems"
         :key="item.route"
@@ -24,19 +24,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 interface NavItem {
   label: string
   route: string
 }
 
-const navItems = ref<NavItem[]>([
-  { label: 'Dashboard', route: '/read-tracker/dashboard' },
-  { label: 'Sessions', route: '/read-tracker/sessions' },
-  { label: 'Books', route: '/read-tracker/books' },
-  { label: 'Goals', route: '/read-tracker/goals' },
-  { label: 'Settings', route: '/read-tracker/settings' }
+const i18n = useI18n()
+const { t, locale } = i18n
+
+const navItems = computed<NavItem[]>(() => [
+  { label: t('readTracker.dashboard'), route: '/read-tracker/dashboard' },
+  { label: t('readTracker.sessions'), route: '/read-tracker/sessions' },
+  { label: t('readTracker.books'), route: '/read-tracker/books' },
+  { label: t('readTracker.goals'), route: '/read-tracker/goals' },
+  { label: t('readTracker.settings'), route: '/read-tracker/settings' }
 ])
 </script>
 

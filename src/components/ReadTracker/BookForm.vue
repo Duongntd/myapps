@@ -3,7 +3,7 @@
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
       <div class="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
         <h3 class="text-lg sm:text-xl font-semibold text-gray-900">
-          {{ editingBook ? 'Edit Book' : 'Add Book' }}
+          {{ editingBook ? $t('bookForm.editBook') : $t('bookForm.addBook') }}
         </h3>
         <button
           @click="$emit('close')"
@@ -20,14 +20,14 @@
         <!-- Title -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Title <span class="text-red-500">*</span>
+            {{ $t('bookForm.title') }} <span class="text-red-500">*</span>
           </label>
           <input
             v-model="formData.title"
             type="text"
             required
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Enter book title"
+            :placeholder="$t('bookForm.titlePlaceholder')"
           />
           <p v-if="errors.title" class="mt-1 text-sm text-red-600">{{ errors.title }}</p>
         </div>
@@ -35,14 +35,14 @@
         <!-- Author -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Author <span class="text-red-500">*</span>
+            {{ $t('bookForm.author') }} <span class="text-red-500">*</span>
           </label>
           <input
             v-model="formData.author"
             type="text"
             required
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Enter author name"
+            :placeholder="$t('bookForm.authorPlaceholder')"
           />
           <p v-if="errors.author" class="mt-1 text-sm text-red-600">{{ errors.author }}</p>
         </div>
@@ -50,15 +50,15 @@
         <!-- Cover Image URL -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Cover Image URL (Optional)
+            {{ $t('bookForm.coverImageUrl') }}
           </label>
           <input
             v-model="formData.coverImage"
             type="url"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="https://example.com/book-cover.jpg"
+            :placeholder="$t('bookForm.coverImagePlaceholder')"
           />
-          <p class="mt-1 text-xs text-gray-500">You can add a cover image URL or leave it blank</p>
+          <p class="mt-1 text-xs text-gray-500">{{ $t('bookForm.coverImageUrlDesc') }}</p>
           <div v-if="formData.coverImage" class="mt-3">
             <img
               :src="formData.coverImage"
@@ -72,23 +72,23 @@
         <!-- Status -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Status <span class="text-red-500">*</span>
+            {{ $t('bookForm.status') }} <span class="text-red-500">*</span>
           </label>
           <select
             v-model="formData.status"
             required
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            <option value="wantToRead">Want to Read</option>
-            <option value="reading">Currently Reading</option>
-            <option value="completed">Completed</option>
+            <option value="wantToRead">{{ $t('bookForm.wantToRead') }}</option>
+            <option value="reading">{{ $t('bookForm.currentlyReading') }}</option>
+            <option value="completed">{{ $t('bookForm.completed') }}</option>
           </select>
         </div>
 
         <!-- Start Date (if reading or completed) -->
         <div v-if="formData.status === 'reading' || formData.status === 'completed'">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Start Date (Optional)
+            {{ $t('bookForm.startDate') }}
           </label>
           <input
             v-model="formData.startDate"
@@ -100,7 +100,7 @@
         <!-- Completed Date (if completed) -->
         <div v-if="formData.status === 'completed'">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Completed Date (Optional)
+            {{ $t('bookForm.completedDate') }}
           </label>
           <input
             v-model="formData.completedDate"
@@ -121,14 +121,14 @@
             @click="$emit('close')"
             class="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation"
           >
-            Cancel
+            {{ $t('common.cancel') }}
           </button>
           <button
             type="submit"
             :disabled="loading"
             class="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           >
-            {{ loading ? 'Saving...' : (editingBook ? 'Update Book' : 'Add Book') }}
+            {{ loading ? $t('common.saving') : (editingBook ? $t('bookForm.updateBook') : $t('bookForm.addBook')) }}
           </button>
         </div>
       </form>
@@ -138,6 +138,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useBooksStore } from '@/stores/books'
 import type { Book } from '@/firebase/firestore'
 import { Timestamp } from 'firebase/firestore'
@@ -155,6 +156,8 @@ const emit = defineEmits<{
   close: []
   save: []
 }>()
+
+const { t } = useI18n()
 
 const booksStore = useBooksStore()
 
@@ -195,11 +198,11 @@ const validateForm = (): boolean => {
   errors.value = {}
 
   if (!formData.value.title.trim()) {
-    errors.value.title = 'Title is required'
+    errors.value.title = t('bookForm.titleRequired')
   }
 
   if (!formData.value.author.trim()) {
-    errors.value.author = 'Author is required'
+    errors.value.author = t('bookForm.authorRequired')
   }
 
   return Object.keys(errors.value).length === 0
@@ -232,7 +235,7 @@ const handleSubmit = async () => {
     emit('save')
   } catch (error) {
     console.error('Error saving book:', error)
-    submitError.value = 'Failed to save book. Please try again.'
+    submitError.value = t('bookForm.saveError')
   } finally {
     loading.value = false
   }

@@ -5,41 +5,41 @@
       <!-- Today's Reading -->
       <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between mb-1 sm:mb-2">
-          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Today</h3>
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('dashboard.today') }}</h3>
           <span class="text-xl sm:text-2xl">📖</span>
         </div>
         <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatDuration(todayTotal) }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ todaySessions }} session{{ todaySessions !== 1 ? 's' : '' }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ todaySessions }} {{ todaySessions !== 1 ? $t('dashboard.sessions') : $t('dashboard.session') }}</p>
       </div>
 
       <!-- This Week -->
       <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between mb-1 sm:mb-2">
-          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Week</h3>
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('dashboard.week') }}</h3>
           <span class="text-xl sm:text-2xl">📅</span>
         </div>
         <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatDuration(weekTotal) }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ weekSessions }} session{{ weekSessions !== 1 ? 's' : '' }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ weekSessions }} {{ weekSessions !== 1 ? $t('dashboard.sessions') : $t('dashboard.session') }}</p>
       </div>
 
       <!-- This Month -->
       <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between mb-1 sm:mb-2">
-          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Month</h3>
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('dashboard.month') }}</h3>
           <span class="text-xl sm:text-2xl">📆</span>
         </div>
         <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatDuration(monthTotal) }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ monthSessions }} session{{ monthSessions !== 1 ? 's' : '' }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ monthSessions }} {{ monthSessions !== 1 ? $t('dashboard.sessions') : $t('dashboard.session') }}</p>
       </div>
 
       <!-- Reading Streak -->
       <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between mb-1 sm:mb-2">
-          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Streak</h3>
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('dashboard.streak') }}</h3>
           <span class="text-xl sm:text-2xl">🔥</span>
         </div>
         <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ readingStreak }}</p>
-        <p class="text-xs text-gray-500 mt-1">day{{ readingStreak !== 1 ? 's' : '' }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ readingStreak }} {{ readingStreak !== 1 ? $t('dashboard.daysPlural') : $t('dashboard.days') }}</p>
       </div>
     </div>
 
@@ -47,11 +47,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <!-- Average Reading Time -->
       <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Average Reading Time</h3>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{{ $t('dashboard.averageReadingTime') }}</h3>
         <div class="space-y-3 sm:space-y-4">
           <div>
             <div class="flex justify-between items-center mb-1">
-              <span class="text-xs sm:text-sm text-gray-600">Daily (Week)</span>
+              <span class="text-xs sm:text-sm text-gray-600">{{ $t('dashboard.dailyWeek') }}</span>
               <span class="text-base sm:text-lg font-semibold text-gray-900">{{ formatDuration(weekDailyAverage) }}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -63,7 +63,7 @@
           </div>
           <div>
             <div class="flex justify-between items-center mb-1">
-              <span class="text-xs sm:text-sm text-gray-600">Daily (Month)</span>
+              <span class="text-xs sm:text-sm text-gray-600">{{ $t('dashboard.dailyMonth') }}</span>
               <span class="text-base sm:text-lg font-semibold text-gray-900">{{ formatDuration(monthDailyAverage) }}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -78,18 +78,18 @@
 
       <!-- Books Stats -->
       <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Books</h3>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{{ $t('dashboard.books') }}</h3>
         <div class="space-y-3 sm:space-y-4">
           <div class="flex justify-between items-center">
-            <span class="text-sm sm:text-base text-gray-600">Reading</span>
+            <span class="text-sm sm:text-base text-gray-600">{{ $t('dashboard.reading') }}</span>
             <span class="text-xl sm:text-2xl font-bold text-blue-600">{{ readingBooksCount }}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-sm sm:text-base text-gray-600">Completed</span>
+            <span class="text-sm sm:text-base text-gray-600">{{ $t('dashboard.completed') }}</span>
             <span class="text-xl sm:text-2xl font-bold text-green-600">{{ completedBooksCount }}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-sm sm:text-base text-gray-600">Want to Read</span>
+            <span class="text-sm sm:text-base text-gray-600">{{ $t('dashboard.wantToRead') }}</span>
             <span class="text-xl sm:text-2xl font-bold text-gray-600">{{ wantToReadBooksCount }}</span>
           </div>
         </div>
@@ -98,7 +98,7 @@
 
     <!-- Goals Section -->
     <div v-if="activeGoals.length > 0" class="bg-white rounded-lg shadow p-4 sm:p-6">
-      <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Active Goals</h3>
+      <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{{ $t('dashboard.activeGoals') }}</h3>
       <div class="space-y-3 sm:space-y-4">
         <div
           v-for="goal in activeGoals"
@@ -106,7 +106,7 @@
           class="p-3 sm:p-4 bg-gray-50 rounded-lg"
         >
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
-            <span class="text-sm sm:text-base font-medium text-gray-900">{{ formatGoalType(goal.type) }} Goal</span>
+            <span class="text-sm sm:text-base font-medium text-gray-900">{{ formatGoalType(goal.type) }} {{ $t('dashboard.goal') }}</span>
             <span class="text-xs sm:text-sm font-semibold text-gray-700">
               {{ formatDuration(goalProgress(goal).current) }} / {{ formatDuration(goal.targetMinutes) }}
             </span>
@@ -121,7 +121,7 @@
             ></div>
           </div>
           <p class="text-xs text-gray-500">
-            {{ Math.round(goalProgress(goal).percentage) }}% complete
+            {{ Math.round(goalProgress(goal).percentage) }}% {{ $t('dashboard.complete') }}
             <span v-if="goalProgress(goal).percentage >= 100"> 🎉</span>
           </p>
         </div>
@@ -133,15 +133,16 @@
       <!-- Weekly Reading Chart -->
       <div class="bg-white rounded-lg shadow p-4 sm:p-6">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-3 sm:mb-4">
-          <h3 class="text-base sm:text-lg font-semibold text-gray-900">Reading Trends</h3>
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900">{{ $t('dashboard.readingTrends') }}</h3>
           <select
             v-model="chartPeriod"
             @change="updateCharts"
+            :key="locale"
             class="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 w-full sm:w-auto"
           >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
+            <option value="week">{{ $t('dashboard.thisWeek') }}</option>
+            <option value="month">{{ $t('dashboard.thisMonth') }}</option>
+            <option value="year">{{ $t('dashboard.thisYear') }}</option>
           </select>
         </div>
         <ReadingChart :data="chartData" :period="chartPeriod" />
@@ -149,7 +150,7 @@
 
       <!-- Daily Breakdown -->
       <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Daily Breakdown</h3>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{{ $t('dashboard.dailyBreakdown') }}</h3>
         <DailyBreakdownChart :sessions="sessionsStore.sessions" :period="chartPeriod" />
       </div>
     </div>
@@ -158,9 +159,9 @@
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-1">This Year</h3>
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-1">{{ $t('dashboard.yearlyTotal') }}</h3>
           <p class="text-2xl sm:text-3xl font-bold text-primary-600">{{ formatDuration(yearTotal) }}</p>
-          <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ yearSessions }} total sessions</p>
+          <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ yearSessions }} {{ $t('dashboard.totalSessions') }}</p>
         </div>
         <div class="text-4xl sm:text-6xl hidden sm:block">📚</div>
       </div>
@@ -170,6 +171,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useReadingSessionsStore } from '@/stores/readingSessions'
 import { useBooksStore } from '@/stores/books'
 import { useGoalsStore } from '@/stores/goals'
@@ -190,6 +192,8 @@ import {
   getYear
 } from 'date-fns'
 import type { ReadingSession, Goal } from '@/firebase/firestore'
+
+const { t, locale } = useI18n()
 
 const sessionsStore = useReadingSessionsStore()
 const booksStore = useBooksStore()
@@ -424,10 +428,10 @@ const goalProgress = (goal: Goal) => {
 
 const formatGoalType = (type: string): string => {
   const typeMap: Record<string, string> = {
-    daily: 'Daily',
-    weekly: 'Weekly',
-    monthly: 'Monthly',
-    yearly: 'Yearly'
+    daily: t('goals.types.daily'),
+    weekly: t('goals.types.weekly'),
+    monthly: t('goals.types.monthly'),
+    yearly: t('goals.types.yearly')
   }
   return typeMap[type] || type
 }

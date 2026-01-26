@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">My Books</h2>
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ $t('books.title') }}</h2>
         <button
           @click="showForm = true"
           class="bg-primary-600 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation"
@@ -11,7 +11,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span>Add Book</span>
+          <span>{{ $t('books.addBook') }}</span>
         </button>
       </div>
     </div>
@@ -26,7 +26,7 @@
 
     <!-- Status Filter Tabs -->
     <div class="bg-white rounded-lg shadow">
-      <div class="border-b border-gray-200 overflow-x-auto scrollbar-hide">
+      <div class="border-b border-gray-200 overflow-x-auto scrollbar-hide" :key="locale">
         <nav class="flex -mb-px min-w-max">
           <button
             v-for="status in statusFilters"
@@ -54,13 +54,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div class="flex-1">
-            <p class="text-sm font-medium text-red-800">Error loading books</p>
+            <p class="text-sm font-medium text-red-800">{{ $t('books.errorLoading') }}</p>
             <p class="text-xs sm:text-sm text-red-600 mt-1">{{ booksStore.error }}</p>
             <button
               @click="booksStore.fetchBooks()"
               class="mt-2 text-xs sm:text-sm text-red-700 underline hover:text-red-800"
             >
-              Try again
+              {{ $t('common.tryAgain') }}
             </button>
           </div>
         </div>
@@ -69,14 +69,14 @@
       <!-- Loading State -->
       <div v-if="booksStore.loading" class="p-8 sm:p-12 text-center">
         <div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-        <p class="text-sm sm:text-base text-gray-600">Loading books...</p>
+        <p class="text-sm sm:text-base text-gray-600">{{ $t('books.loadingBooks') }}</p>
       </div>
 
       <!-- Empty State -->
       <div v-else-if="filteredBooks.length === 0" class="p-8 sm:p-12 text-center">
         <div class="text-5xl sm:text-6xl mb-4">📚</div>
-        <p class="text-gray-600 text-base sm:text-lg mb-2">No books in this category</p>
-        <p class="text-gray-500 text-sm">Add a book to get started!</p>
+        <p class="text-gray-600 text-base sm:text-lg mb-2">{{ $t('books.noBooks') }}</p>
+        <p class="text-gray-500 text-sm">{{ $t('books.noBooksDesc') }}</p>
       </div>
 
       <!-- Books Grid -->
@@ -155,11 +155,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useBooksStore } from '@/stores/books'
 import { useReadingSessionsStore } from '@/stores/readingSessions'
 import BookForm from '@/components/ReadTracker/BookForm.vue'
 import BookDetailsModal from '@/components/ReadTracker/BookDetailsModal.vue'
 import type { Book } from '@/firebase/firestore'
+
+const { t, locale } = useI18n()
 
 const booksStore = useBooksStore()
 const sessionsStore = useReadingSessionsStore()
@@ -169,12 +172,12 @@ const editingBook = ref<Book | null>(null)
 const selectedBook = ref<Book | null>(null)
 const activeFilter = ref<'all' | 'reading' | 'completed' | 'wantToRead'>('all')
 
-const statusFilters = [
-  { label: 'All', value: 'all' as const },
-  { label: 'Reading', value: 'reading' as const },
-  { label: 'Completed', value: 'completed' as const },
-  { label: 'Want to Read', value: 'wantToRead' as const }
-]
+const statusFilters = computed(() => [
+  { label: t('books.all'), value: 'all' as const },
+  { label: t('books.reading'), value: 'reading' as const },
+  { label: t('books.completed'), value: 'completed' as const },
+  { label: t('books.wantToRead'), value: 'wantToRead' as const }
+])
 
 // Fetch data on mount
 onMounted(async () => {
@@ -217,21 +220,21 @@ const handleStatusUpdate = async () => {
 }
 
 const deleteBook = async (bookId: string) => {
-  if (confirm('Are you sure you want to delete this book?')) {
+  if (confirm(t('books.deleteConfirm'))) {
     try {
       await booksStore.removeBook(bookId)
     } catch (error) {
       console.error('Error deleting book:', error)
-      alert('Failed to delete book. Please try again.')
+      alert(t('books.deleteError'))
     }
   }
 }
 
 const formatStatus = (status: string): string => {
   const statusMap: Record<string, string> = {
-    reading: 'Reading',
-    completed: 'Completed',
-    wantToRead: 'Want to Read'
+    reading: t('books.status.reading'),
+    completed: t('books.status.completed'),
+    wantToRead: t('books.status.wantToRead')
   }
   return statusMap[status] || status
 }
