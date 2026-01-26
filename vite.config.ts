@@ -18,8 +18,14 @@ const maReleaseNotes = process.env.VITE_MA_RELEASE_NOTES || ''
 
 // RT-specific version info (defaults to package.json version to keep it separate from MA releases)
 // Only updates when VITE_RT_VERSION is explicitly set (i.e., on rt- releases)
+// When VITE_RT_VERSION is undefined (not set), use package.json version (doesn't change on MA releases)
 const rtVersion = process.env.VITE_RT_VERSION || packageJson.version || '1.0.0'
-const rtReleaseTime = process.env.VITE_RT_RELEASE_TIME || releaseTime
+// RT release time: only use if explicitly set
+// When undefined (not set), use a constant default to prevent RT date from updating on MA releases
+// This ensures RT release date only changes when an rt- release is made
+const rtReleaseTime = (process.env.VITE_RT_RELEASE_TIME && process.env.VITE_RT_RELEASE_TIME.trim() !== '')
+  ? process.env.VITE_RT_RELEASE_TIME
+  : new Date('2024-01-01T00:00:00Z').toISOString() // Constant default that doesn't change
 const rtReleaseNotes = process.env.VITE_RT_RELEASE_NOTES || ''
 
 // https://vitejs.dev/config/

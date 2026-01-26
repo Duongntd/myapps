@@ -4,6 +4,8 @@
  * Supports both MyApps (MA) and Read Tracker (RT) version prefixes
  */
 
+import { marked } from 'marked'
+
 // Version will be injected by Vite during build
 // For backward compatibility, use APP_VERSION if specific versions not set
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0'
@@ -118,35 +120,36 @@ export function getVersionWithReleaseDate(): string {
 
 /**
  * Get release notes formatted for display (default)
- * Converts markdown-style newlines to HTML line breaks
+ * Renders markdown to HTML
  */
 export function getFormattedReleaseNotes(): string {
   if (!RELEASE_NOTES) return ''
-  // Convert \n to actual newlines and escape HTML
-  return RELEASE_NOTES
-    .replace(/\\n/g, '\n')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  // Convert escaped newlines to actual newlines
+  const notes = RELEASE_NOTES.replace(/\\n/g, '\n')
+  // Render markdown to HTML
+  return marked.parse(notes) as string
 }
 
 /**
  * Get MyApps (MA) release notes formatted for display
+ * Renders markdown to HTML
  */
 export function getMAFormattedReleaseNotes(): string {
   if (!MA_RELEASE_NOTES) return ''
-  return MA_RELEASE_NOTES
-    .replace(/\\n/g, '\n')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  // Convert escaped newlines to actual newlines
+  const notes = MA_RELEASE_NOTES.replace(/\\n/g, '\n')
+  // Render markdown to HTML
+  return marked.parse(notes) as string
 }
 
 /**
  * Get Read Tracker (RT) release notes formatted for display
+ * Renders markdown to HTML
  */
 export function getRTFormattedReleaseNotes(): string {
   if (!RT_RELEASE_NOTES) return ''
-  return RT_RELEASE_NOTES
-    .replace(/\\n/g, '\n')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  // Convert escaped newlines to actual newlines
+  const notes = RT_RELEASE_NOTES.replace(/\\n/g, '\n')
+  // Render markdown to HTML
+  return marked.parse(notes) as string
 }
