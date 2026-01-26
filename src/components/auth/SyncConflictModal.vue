@@ -26,18 +26,6 @@
         </button>
         
         <button
-          @click="handleStrategy('useLocal')"
-          class="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
-        >
-          <div class="font-medium text-gray-900 mb-1">
-            {{ $t('localMode.syncModal.useLocal') }}
-          </div>
-          <div class="text-xs text-gray-500">
-            {{ $t('localMode.syncModal.useLocalDesc') }}
-          </div>
-        </button>
-        
-        <button
           @click="handleStrategy('merge')"
           class="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
         >

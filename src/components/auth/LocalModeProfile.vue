@@ -153,7 +153,7 @@ const handleSyncStrategy = async (strategy: SyncStrategy): Promise<void> => {
       return
     }
     
-    // For 'useLocal' or 'merge', sync the data
+    // For 'merge', sync the data
     const result = await syncLocalToFirebase(pendingUser.value, strategy)
     
     if (result.success) {

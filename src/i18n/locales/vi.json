@@ -255,10 +255,8 @@
       "message": "Bạn có dữ liệu cục bộ. Bạn muốn đồng bộ với tài khoản như thế nào?",
       "useAccount": "Sử dụng dữ liệu tài khoản",
       "useAccountDesc": "Giữ dữ liệu tài khoản hiện có và bỏ dữ liệu cục bộ",
-      "useLocal": "Sử dụng dữ liệu cục bộ",
-      "useLocalDesc": "Đồng bộ dữ liệu cục bộ vào tài khoản (thêm vào dữ liệu hiện có)",
       "merge": "Gộp cả hai",
-      "mergeDesc": "Giữ tất cả dữ liệu từ cả hai nguồn"
+      "mergeDesc": "Thêm dữ liệu cục bộ vào tài khoản (giữ dữ liệu tài khoản hiện có)"
     },
     "syncConflict": {
       "title": "Xung đột dữ liệu",
