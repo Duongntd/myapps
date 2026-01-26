@@ -152,7 +152,7 @@ import ReadingSessionForm from '@/components/ReadTracker/ReadingSessionForm.vue'
 import AddSessionPrompt from '@/components/ReadTracker/AddSessionPrompt.vue'
 import type { ReadingSession } from '@/firebase/firestore'
 import { Timestamp } from 'firebase/firestore'
-import { format, isToday, isThisWeek, isThisMonth, isThisYear, format as formatDate } from 'date-fns'
+import { format, isToday, isThisWeek, isThisMonth, isThisYear } from 'date-fns'
 
 const { t, locale } = useI18n()
 
@@ -173,7 +173,7 @@ const hasSessionToday = computed(() => {
 
 // Check if prompt was already shown today (stored in localStorage)
 const getPromptShownKey = (): string => {
-  const today = formatDate(new Date(), 'yyyy-MM-dd')
+  const today = format(new Date(), 'yyyy-MM-dd')
   return `sessionPromptShown_${today}`
 }
 
