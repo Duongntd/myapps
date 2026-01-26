@@ -6,22 +6,6 @@
       <p class="text-sm text-gray-600 mt-1">{{ $t('readTrackerSettings.subtitle') }}</p>
     </div>
 
-    <!-- Read Tracker App Information -->
-    <div class="bg-white rounded-lg shadow p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $t('readTrackerSettings.about') }}</h3>
-      <div class="space-y-3 text-sm text-gray-600">
-        <p><strong>{{ $t('readTracker.title') }}</strong> - {{ $t('readTracker.subtitle') }}</p>
-        <p>{{ $t('settings.version') }}: <span class="font-mono font-medium">{{ versionString }}</span></p>
-        <p v-if="showReleaseInfo" class="text-xs text-gray-500">{{ $t('settings.releaseDate') }}: {{ releaseDate }}</p>
-        
-        <!-- Release Notes -->
-        <div v-if="hasReleaseNotes" class="mt-4 pt-4 border-t border-gray-200">
-          <h4 class="text-sm font-semibold text-gray-900 mb-2">{{ $t('settings.releaseNotes') }}</h4>
-          <div class="text-xs text-gray-600 markdown-content" v-html="formattedReleaseNotes"></div>
-        </div>
-      </div>
-    </div>
-
     <!-- Read Tracker Specific Settings -->
     <div class="bg-white rounded-lg shadow p-6">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $t('readTrackerSettings.readTrackerSettings') }}</h3>
@@ -31,18 +15,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { getRTVersionString, getRTVersionInfo, getRTFormattedReleaseNotes } from '@/utils/version'
 
 useI18n() // Required for $t() in template
-
-const versionString = computed(() => getRTVersionString())
-const versionInfo = computed(() => getRTVersionInfo())
-const releaseDate = computed(() => versionInfo.value.releaseDate)
-const showReleaseInfo = computed(() => import.meta.env.PROD)
-const formattedReleaseNotes = computed(() => getRTFormattedReleaseNotes())
-const hasReleaseNotes = computed(() => !!versionInfo.value.releaseNotes)
 </script>
 
 <style scoped>

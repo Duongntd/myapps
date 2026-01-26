@@ -49,16 +49,16 @@
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import { getMAVersionString, getMAVersionInfo, getMAFormattedReleaseNotes } from '@/utils/version'
+import { getVersionString, getVersionInfo, getFormattedReleaseNotes } from '@/utils/version'
 
 useI18n() // Required for $t() in template
 const authStore = useAuthStore()
 
-const versionString = computed(() => getMAVersionString())
-const versionInfo = computed(() => getMAVersionInfo())
+const versionString = computed(() => getVersionString())
+const versionInfo = computed(() => getVersionInfo())
 const releaseDate = computed(() => versionInfo.value.releaseDate)
 const showReleaseInfo = computed(() => import.meta.env.PROD)
-const formattedReleaseNotes = computed(() => getMAFormattedReleaseNotes())
+const formattedReleaseNotes = computed(() => getFormattedReleaseNotes())
 const hasReleaseNotes = computed(() => !!versionInfo.value.releaseNotes)
 </script>
 
