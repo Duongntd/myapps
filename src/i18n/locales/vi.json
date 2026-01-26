@@ -256,9 +256,9 @@
       "useAccount": "Sử dụng dữ liệu tài khoản",
       "useAccountDesc": "Giữ dữ liệu tài khoản hiện có và bỏ dữ liệu cục bộ",
       "useLocal": "Sử dụng dữ liệu cục bộ",
-      "useLocalDesc": "Thay thế dữ liệu tài khoản bằng dữ liệu cục bộ (ghi đè dữ liệu hiện có)",
+      "useLocalDesc": "Đồng bộ dữ liệu cục bộ vào tài khoản (thêm vào dữ liệu hiện có)",
       "merge": "Gộp cả hai",
-      "mergeDesc": "Thêm dữ liệu cục bộ vào tài khoản (giữ dữ liệu tài khoản hiện có)"
+      "mergeDesc": "Giữ tất cả dữ liệu từ cả hai nguồn"
     },
     "syncConflict": {
       "title": "Xung đột dữ liệu",

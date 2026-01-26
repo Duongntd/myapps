@@ -256,9 +256,9 @@
       "useAccount": "Use account data",
       "useAccountDesc": "Keep your existing account data and discard local data",
       "useLocal": "Use local data",
-      "useLocalDesc": "Replace account data with your local data (overwrites existing data)",
+      "useLocalDesc": "Sync local data to your account (adds to existing data)",
       "merge": "Merge both",
-      "mergeDesc": "Add local data to your account (keeps existing account data)"
+      "mergeDesc": "Keep all data from both sources"
     },
     "syncConflict": {
       "title": "Data Conflict",
