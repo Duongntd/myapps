@@ -84,15 +84,25 @@ curl -H "Authorization: token YOUR_TOKEN" \
 
 ### Commenting on Issues
 
-**Post breakdown comment**:
+**Post breakdown comment (with token check)**:
 ```bash
-curl -X POST \
-  -H "Authorization: token YOUR_TOKEN" \
-  -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/owner/repo/issues/42/comments" \
-  -d '{
-    "body": "## Implementation Breakdown\n\n### Overview\n...\n\n### Deliverables\n..."
-  }'
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "GITHUB_TOKEN not set. Use GitHub CLI or set token."
+  gh issue comment 42 --body "Comment text" 2>/dev/null || echo "Manual: Comment at https://github.com/{owner}/{repo}/issues/42"
+else
+  curl -X POST \
+    -H "Authorization: token $GITHUB_TOKEN" \
+    -H "Accept: application/vnd.github.v3+json" \
+    "https://api.github.com/repos/owner/repo/issues/42/comments" \
+    -d '{
+      "body": "## Implementation Breakdown\n\n### Overview\n...\n\n### Deliverables\n..."
+    }'
+fi
+```
+
+**Alternative: Use GitHub CLI**:
+```bash
+gh issue comment 42 --body "Comment text"
 ```
 
 **Comment Format Template**:
@@ -196,18 +206,33 @@ git push origin issue-42-dark-mode-toggle
 
 ### Creating Pull Requests
 
-**Create PR via GitHub API**:
+**Create PR via GitHub API (with token check)**:
 ```bash
-curl -X POST \
-  -H "Authorization: token YOUR_TOKEN" \
-  -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/owner/repo/pulls" \
-  -d '{
-    "title": "Add dark mode toggle [MA-1]",
-    "body": "## Summary\n\nImplements dark mode toggle feature...\n\nCloses #42\n\n## Changes\n\n- Add theme state management\n- Create toggle component\n- Apply theme styles",
-    "head": "issue-42-dark-mode-toggle",
-    "base": "main"
-  }'
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "GITHUB_TOKEN not set. Use GitHub CLI or set token."
+  gh pr create --title "Add dark mode toggle [MA-1]" \
+    --body "## Summary\n\nImplements dark mode toggle feature...\n\nCloses #42" \
+    --base main --head issue-42-dark-mode-toggle 2>/dev/null || \
+    echo "Manual: Create PR at https://github.com/owner/repo/compare/main...issue-42-dark-mode-toggle"
+else
+  curl -X POST \
+    -H "Authorization: token $GITHUB_TOKEN" \
+    -H "Accept: application/vnd.github.v3+json" \
+    "https://api.github.com/repos/owner/repo/pulls" \
+    -d '{
+      "title": "Add dark mode toggle [MA-1]",
+      "body": "## Summary\n\nImplements dark mode toggle feature...\n\nCloses #42\n\n## Changes\n\n- Add theme state management\n- Create toggle component\n- Apply theme styles",
+      "head": "issue-42-dark-mode-toggle",
+      "base": "main"
+    }'
+fi
+```
+
+**Alternative: Use GitHub CLI**:
+```bash
+gh pr create --title "Add dark mode toggle [MA-1]" \
+  --body "## Summary\n\nImplements dark mode toggle feature...\n\nCloses #42" \
+  --base main --head issue-42-dark-mode-toggle
 ```
 
 **PR Title Best Practices**:
@@ -372,6 +397,83 @@ For assignment, commenting, and PR creation, you need a GitHub Personal Access T
    - `public_repo` - Public repository access (for public repos)
    - `issues:write` - Write access to issues (for assignment and comments)
    - `pull_requests:write` - Write access to pull requests (for creating PRs)
+
+### Checking Token Availability
+
+**Always check for token before making authenticated API calls**:
+
+```bash
+# Check if GITHUB_TOKEN is set
+if [ -n "$GITHUB_TOKEN" ]; then
+  echo "Token available"
+else
+  echo "Token not set - skipping authenticated API call"
+fi
+
+# Alternative: Check GitHub CLI authentication
+if gh auth status 2>/dev/null; then
+  echo "GitHub CLI authenticated"
+else
+  echo "GitHub CLI not authenticated"
+fi
+```
+
+### Error Handling for Authentication
+
+**Handle authentication errors gracefully**:
+
+```bash
+# Example: Posting a comment with error handling
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "GITHUB_TOKEN not set. Skipping API call."
+  echo "Manual step: Add comment at https://github.com/{owner}/{repo}/issues/{issue_number}"
+  exit 0
+fi
+
+response=$(curl -s -w "\n%{http_code}" -X POST \
+  -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments" \
+  -d '{"body": "Comment text"}')
+
+http_code=$(echo "$response" | tail -n1)
+body=$(echo "$response" | sed '$d')
+
+case "$http_code" in
+  201|200)
+    echo "Success: Comment posted"
+    ;;
+  401)
+    echo "Error: Bad credentials (401)"
+    echo "Please check your GITHUB_TOKEN"
+    ;;
+  403)
+    echo "Error: Permission denied (403)"
+    echo "Token may lack required permissions"
+    ;;
+  *)
+    echo "Error: API call failed with status $http_code"
+    echo "Response: $body"
+    ;;
+esac
+```
+
+### Common Authentication Issues
+
+1. **401 Bad credentials**:
+   - Token is invalid, expired, or not set correctly
+   - Solution: Verify `GITHUB_TOKEN` is set and valid
+   - Regenerate token if needed
+
+2. **403 Forbidden**:
+   - Token lacks required permissions
+   - Solution: Ensure token has `repo`, `issues:write`, `pull_requests:write` scopes
+   - For organization repos, may need organization approval
+
+3. **Token not set**:
+   - `GITHUB_TOKEN` environment variable is not set
+   - Solution: Set token: `export GITHUB_TOKEN=your_token`
+   - Or use GitHub CLI: `gh auth login`
 
 ### Network Permissions
 
