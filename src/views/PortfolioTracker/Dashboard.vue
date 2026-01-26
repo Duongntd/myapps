@@ -2,26 +2,49 @@
   <div class="space-y-4 sm:space-y-6">
     <!-- Overview Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-      <!-- Total Portfolio Value -->
+      <!-- Total Invested -->
       <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between mb-1 sm:mb-2">
-          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('portfolioTracker.totalValue') }}</h3>
-          <span class="text-xl sm:text-2xl">💰</span>
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('portfolioTracker.totalInvested') }}</h3>
+          <span class="text-xl sm:text-2xl">💵</span>
         </div>
-        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatCurrency(portfolioStore.totalPortfolioValue) }}</p>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatCurrency(portfolioStore.totalInvested) }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ $t('portfolioTracker.deposits') }}</p>
+      </div>
+
+      <!-- Total Cash -->
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-1 sm:mb-2">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('portfolioTracker.totalCash') }}</h3>
+          <span class="text-xl sm:text-2xl">💳</span>
+        </div>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatCurrency(portfolioStore.totalCash) }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ $t('portfolioTracker.available') }}</p>
+      </div>
+
+      <!-- Total Stock Value -->
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-1 sm:mb-2">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('portfolioTracker.totalStockValue') }}</h3>
+          <span class="text-xl sm:text-2xl">📊</span>
+        </div>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatCurrency(portfolioStore.totalStockValue) }}</p>
         <p class="text-xs text-gray-500 mt-1">{{ portfolioStore.holdings.length }} {{ $t('portfolioTracker.holdings') }}</p>
       </div>
 
-      <!-- Total Cost Basis -->
+      <!-- Total Portfolio Value -->
       <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between mb-1 sm:mb-2">
-          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('portfolioTracker.totalCost') }}</h3>
-          <span class="text-xl sm:text-2xl">📊</span>
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">{{ $t('portfolioTracker.totalPortfolioValue') }}</h3>
+          <span class="text-xl sm:text-2xl">💰</span>
         </div>
-        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatCurrency(portfolioStore.totalCostBasis) }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ $t('portfolioTracker.averagePrice') }}</p>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatCurrency(portfolioStore.totalPortfolioValue) }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ $t('portfolioTracker.cashPlusStocks') }}</p>
       </div>
+    </div>
 
+    <!-- Additional Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
       <!-- Total NAV -->
       <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
         <div class="flex items-center justify-between mb-1 sm:mb-2">
@@ -105,8 +128,40 @@
                 <span class="text-sm text-gray-900">{{ formatCurrency(holding.averagePrice) }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentPrice) }}</span>
-                <span v-else class="text-sm text-gray-400">{{ $t('portfolioTracker.loading') }}</span>
+                <div v-if="editingPrice === holding.id" class="flex items-center gap-2">
+                  <input
+                    v-model.number="editPriceValue"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    @keyup.enter="savePrice(holding.symbol)"
+                    @keyup.esc="cancelEditPrice"
+                  />
+                  <button
+                    @click="savePrice(holding.symbol)"
+                    class="text-green-600 hover:text-green-800 text-sm font-medium"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    @click="cancelEditPrice"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div v-else class="flex items-center gap-2">
+                  <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentPrice) }}</span>
+                  <span v-else class="text-sm text-gray-400">{{ $t('portfolioTracker.loading') }}</span>
+                  <button
+                    @click="startEditPrice(holding.id!, holding.currentPrice)"
+                    class="text-primary-600 hover:text-primary-800 text-xs"
+                    :title="$t('portfolioTracker.editPrice')"
+                  >
+                    ✏️
+                  </button>
+                </div>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentValue) }}</span>
@@ -149,12 +204,32 @@ import { useI18n } from 'vue-i18n'
 const portfolioStore = usePortfolioStore()
 const { t } = useI18n()
 const refreshing = ref(false)
+const editingPrice = ref<string | null>(null)
+const editPriceValue = ref<number>(0)
 
 onMounted(async () => {
   await portfolioStore.fetchHoldings()
   await portfolioStore.fetchTransactions()
+  await portfolioStore.fetchAccount()
   await refreshPrices()
 })
+
+const startEditPrice = (holdingId: string, currentPrice: number) => {
+  editingPrice.value = holdingId
+  editPriceValue.value = currentPrice > 0 ? currentPrice : 0
+}
+
+const cancelEditPrice = () => {
+  editingPrice.value = null
+  editPriceValue.value = 0
+}
+
+const savePrice = (symbol: string) => {
+  if (editPriceValue.value > 0) {
+    portfolioStore.updateStockPrice(symbol, editPriceValue.value)
+  }
+  cancelEditPrice()
+}
 
 const refreshPrices = async () => {
   if (refreshing.value) return

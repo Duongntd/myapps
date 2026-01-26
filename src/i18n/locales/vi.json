@@ -41,8 +41,16 @@
     "totalValue": "Tổng giá trị",
     "totalCost": "Tổng chi phí",
     "totalNAV": "Tổng NAV",
+    "totalInvested": "Tổng đầu tư",
+    "totalCash": "Tổng tiền mặt",
+    "totalStockValue": "Tổng giá trị cổ phiếu",
+    "totalPortfolioValue": "Tổng giá trị danh mục",
+    "deposits": "Tiền gửi",
+    "available": "Khả dụng",
+    "cashPlusStocks": "Tiền mặt + Cổ phiếu",
     "holdings": "cổ phiếu",
     "averagePrice": "Giá trung bình",
+    "editPrice": "Chỉnh sửa giá",
     "myHoldings": "Danh mục của tôi",
     "symbol": "Mã",
     "quantity": "Số lượng",
@@ -72,7 +80,13 @@
     "transactionError": "Không thể tạo giao dịch. Vui lòng thử lại.",
     "deleteConfirm": "Bạn có chắc chắn muốn xóa giao dịch này?",
     "deleteError": "Không thể xóa giao dịch. Vui lòng thử lại.",
-    "settingsDesc": "Cài đặt cụ thể cho Portfolio Tracker sẽ có sẵn ở đây trong các phiên bản tương lai."
+    "settingsDesc": "Quản lý cài đặt tài khoản danh mục của bạn",
+    "totalInvestedDesc": "Tổng số tiền bạn đã gửi/đầu tư",
+    "totalCashDesc": "Tiền mặt khả dụng trong danh mục của bạn",
+    "totalInvestedInvalid": "Tổng đầu tư phải lớn hơn hoặc bằng 0",
+    "totalCashInvalid": "Tổng tiền mặt phải lớn hơn hoặc bằng 0",
+    "accountUpdated": "Cập nhật tài khoản thành công!",
+    "updateError": "Không thể cập nhật tài khoản. Vui lòng thử lại."
   },
   "home": {
     "readTracker": {
