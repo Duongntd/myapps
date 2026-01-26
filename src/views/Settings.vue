@@ -1,0 +1,63 @@
+<template>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-2xl font-semibold text-gray-900">{{ $t('settings.title') }}</h2>
+      <p class="text-sm text-gray-600 mt-1">{{ $t('settings.subtitle') }}</p>
+    </div>
+
+    <!-- Account Settings -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $t('settings.account') }}</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div>
+            <p class="font-medium text-gray-900">{{ $t('settings.signedInAs') }}</p>
+            <p class="text-sm text-gray-600 mt-1">{{ authStore.user?.email }}</p>
+            <p v-if="authStore.user?.displayName" class="text-sm text-gray-600">{{ authStore.user.displayName }}</p>
+          </div>
+          <div v-if="authStore.user?.photoURL" class="flex-shrink-0">
+            <img
+              :src="authStore.user.photoURL"
+              :alt="authStore.user.displayName || 'User'"
+              class="w-16 h-16 rounded-full"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $t('settings.about') }}</h3>
+      <div class="space-y-3 text-sm text-gray-600">
+        <p><strong>{{ $t('app.name') }}</strong> - {{ $t('app.subtitle') }}</p>
+        <p>{{ $t('settings.version') }}: <span class="font-mono font-medium">{{ versionString }}</span></p>
+        <p v-if="showReleaseInfo" class="text-xs text-gray-500">{{ $t('settings.releaseDate') }}: {{ releaseDate }}</p>
+        
+        <!-- Release Notes -->
+        <div v-if="hasReleaseNotes" class="mt-4 pt-4 border-t border-gray-200">
+          <h4 class="text-sm font-semibold text-gray-900 mb-2">{{ $t('settings.releaseNotes') }}</h4>
+          <div class="text-xs text-gray-600 whitespace-pre-line">{{ formattedReleaseNotes }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useI18n } from 'vue-i18n'
+import { getMAVersionString, getMAVersionInfo, getMAFormattedReleaseNotes } from '@/utils/version'
+
+useI18n() // Required for $t() in template
+const authStore = useAuthStore()
+
+const versionString = computed(() => getMAVersionString())
+const versionInfo = computed(() => getMAVersionInfo())
+const releaseDate = computed(() => versionInfo.value.releaseDate)
+const showReleaseInfo = computed(() => import.meta.env.PROD)
+const formattedReleaseNotes = computed(() => getMAFormattedReleaseNotes())
+const hasReleaseNotes = computed(() => !!versionInfo.value.releaseNotes)
+</script>

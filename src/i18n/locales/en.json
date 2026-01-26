@@ -217,6 +217,12 @@
     "releaseDate": "Release Date",
     "releaseNotes": "Release Notes"
   },
+  "readTrackerSettings": {
+    "subtitle": "Read Tracker specific settings and preferences",
+    "about": "About Read Tracker",
+    "readTrackerSettings": "Read Tracker Settings",
+    "comingSoon": "Read Tracker specific settings will be available here in future releases."
+  },
   "language": {
     "selectLanguage": "Select Language",
     "english": "English",

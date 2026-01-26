@@ -14,6 +14,15 @@
             <span class="hidden sm:inline">{{ $t('common.home') }}</span>
             <span class="sm:hidden">🏠</span>
           </router-link>
+          <router-link
+            v-if="authStore.isAuthenticated"
+            to="/settings"
+            class="text-sm sm:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors px-2 py-1 rounded"
+            active-class="text-primary-600"
+          >
+            <span class="hidden sm:inline">{{ $t('settings.title') }}</span>
+            <span class="sm:hidden">⚙️</span>
+          </router-link>
           <LanguageSelector />
           <div v-if="authStore.loading" class="px-2 sm:px-4">
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>
