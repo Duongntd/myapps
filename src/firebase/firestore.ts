@@ -7,6 +7,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  setDoc,
   query,
   orderBy,
   Timestamp,
@@ -45,12 +46,6 @@ export interface Goal {
   year?: number
   month?: number
   week?: number
-}
-
-export interface UserSettings {
-  reminderEnabled: boolean
-  reminderTime: string // HH:mm format
-  notificationPermission?: 'granted' | 'denied' | 'default'
 }
 
 // Helper to get user's collection path
@@ -130,19 +125,4 @@ export const updateGoal = async (userId: string, goalId: string, updates: Update
 export const deleteGoal = async (userId: string, goalId: string): Promise<void> => {
   const goalRef = doc(db, `users/${userId}/goals/${goalId}`)
   return await deleteDoc(goalRef)
-}
-
-// Settings
-export const getUserSettings = async (userId: string): Promise<UserSettings | null> => {
-  const settingsRef = doc(db, `users/${userId}/settings/user`)
-  const snapshot = await getDoc(settingsRef)
-  if (snapshot.exists()) {
-    return snapshot.data() as UserSettings
-  }
-  return null
-}
-
-export const updateUserSettings = async (userId: string, settings: Partial<UserSettings>): Promise<void> => {
-  const settingsRef = doc(db, `users/${userId}/settings/user`)
-  return await updateDoc(settingsRef, settings)
 }
