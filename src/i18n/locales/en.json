@@ -36,6 +36,11 @@
       "name": "Read Tracker",
       "description": "Track your reading time, manage books, set goals, and build better reading habits.",
       "openApp": "Open App"
+    },
+    "localMode": {
+      "title": "Use without login",
+      "description": "You can use the app without signing in. Your data will be stored locally in your browser and will be lost if you clear your cache or switch devices.",
+      "startButton": "Start without login"
     }
   },
   "dashboard": {
@@ -214,5 +219,11 @@
     "selectLanguage": "Select Language",
     "english": "English",
     "vietnamese": "Vietnamese"
+  },
+  "localMode": {
+    "warning": "You are using the app in local mode. Your data is stored only in your browser.",
+    "warningPoint1": "Data will be lost if you clear your browser cache",
+    "warningPoint2": "Data will not sync across devices",
+    "warningPoint3": "Sign in with Google to sync your data across devices"
   }
 }

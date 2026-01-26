@@ -62,6 +62,7 @@ router.beforeEach((to, from, next) => {
     // Wait a bit for auth to initialize
     const checkAuth = () => {
       if (!authStore.loading) {
+        // Allow access if authenticated OR in local mode
         if (to.meta.requiresAuth && !authStore.isAuthenticated) {
           next({ name: 'home' })
         } else {
@@ -73,6 +74,7 @@ router.beforeEach((to, from, next) => {
     }
     checkAuth()
   } else {
+    // Allow access if authenticated OR in local mode
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
       next({ name: 'home' })
     } else {

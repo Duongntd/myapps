@@ -36,6 +36,11 @@
       "name": "Read Tracker",
       "description": "Theo dõi thời gian đọc sách, quản lý sách, đặt mục tiêu và xây dựng thói quen đọc tốt hơn.",
       "openApp": "Mở ứng dụng"
+    },
+    "localMode": {
+      "title": "Sử dụng không cần đăng nhập",
+      "description": "Bạn có thể sử dụng ứng dụng mà không cần đăng nhập. Dữ liệu của bạn sẽ được lưu trữ cục bộ trong trình duyệt và sẽ bị mất nếu bạn xóa bộ nhớ cache hoặc chuyển thiết bị.",
+      "startButton": "Bắt đầu không cần đăng nhập"
     }
   },
   "dashboard": {
@@ -214,5 +219,11 @@
     "selectLanguage": "Chọn ngôn ngữ",
     "english": "Tiếng Anh",
     "vietnamese": "Tiếng Việt"
+  },
+  "localMode": {
+    "warning": "Bạn đang sử dụng ứng dụng ở chế độ cục bộ. Dữ liệu của bạn chỉ được lưu trong trình duyệt.",
+    "warningPoint1": "Dữ liệu sẽ bị mất nếu bạn xóa bộ nhớ cache của trình duyệt",
+    "warningPoint2": "Dữ liệu sẽ không đồng bộ giữa các thiết bị",
+    "warningPoint3": "Đăng nhập bằng Google để đồng bộ dữ liệu giữa các thiết bị"
   }
 }

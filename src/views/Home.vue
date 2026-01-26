@@ -5,6 +5,29 @@
       <p class="text-base sm:text-xl text-gray-600">{{ $t('app.subtitle') }}</p>
     </div>
 
+    <!-- Local Mode Option -->
+    <div v-if="!authStore.isAuthenticated" class="mb-8 sm:mb-12">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6 max-w-2xl mx-auto">
+        <div class="flex items-start gap-3 sm:gap-4">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{{ $t('home.localMode.title') }}</h3>
+            <p class="text-sm sm:text-base text-gray-700 mb-4">{{ $t('home.localMode.description') }}</p>
+            <button
+              @click="enableLocalMode"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm sm:text-base"
+            >
+              {{ $t('home.localMode.startButton') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       <div
         v-for="app in apps"
@@ -16,8 +39,8 @@
         <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">{{ app.name }}</h2>
         <p class="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">{{ app.description }}</p>
           <button class="w-full bg-primary-600 text-white py-2.5 sm:py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors text-sm sm:text-base touch-manipulation">
-          {{ $t('home.readTracker.openApp') }}
-        </button>
+            {{ $t('home.readTracker.openApp') }}
+          </button>
       </div>
     </div>
   </div>
@@ -27,6 +50,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
 
 interface App {
   id: string
@@ -37,6 +61,7 @@ interface App {
 }
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const { t } = useI18n()
 
@@ -53,5 +78,10 @@ const apps = ref<App[]>([
 
 const navigateToApp = (route: string): void => {
   router.push(route)
+}
+
+const enableLocalMode = (): void => {
+  authStore.enableLocalMode()
+  router.push('/read-tracker')
 }
 </script>

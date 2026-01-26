@@ -1,5 +1,7 @@
 <template>
   <div class="w-full">
+    <LocalModeWarning />
+    
     <div class="mb-4 sm:mb-6 lg:mb-8">
       <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{{ $t('readTracker.title') }}</h1>
       <p class="text-sm sm:text-base text-gray-600">{{ $t('readTracker.subtitle') }}</p>
@@ -26,6 +28,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import LocalModeWarning from '@/components/common/LocalModeWarning.vue'
 
 interface NavItem {
   label: string

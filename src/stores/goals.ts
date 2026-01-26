@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, type Ref } from 'vue'
-import { getGoals, addGoal, updateGoal, deleteGoal, type Goal } from '@/firebase/firestore'
+import { getGoals as getGoalsFirebase, addGoal as addGoalFirebase, updateGoal as updateGoalFirebase, deleteGoal as deleteGoalFirebase, type Goal } from '@/firebase/firestore'
+import { getGoals as getGoalsLocal, addGoal as addGoalLocal, updateGoal as updateGoalLocal, deleteGoal as deleteGoalLocal } from '@/storage/localStorage'
 import { useAuthStore } from './auth'
 import type { DocumentReference, DocumentData } from 'firebase/firestore'
 
@@ -11,12 +12,16 @@ export const useGoalsStore = defineStore('goals', () => {
 
   const fetchGoals = async (): Promise<void> => {
     const authStore = useAuthStore()
-    if (!authStore.user) return
+    if (!authStore.isAuthenticated) return
 
     loading.value = true
     error.value = null
     try {
-      goals.value = await getGoals(authStore.user.uid)
+      if (authStore.localMode) {
+        goals.value = await getGoalsLocal()
+      } else if (authStore.user) {
+        goals.value = await getGoalsFirebase(authStore.user.uid)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load goals'
       error.value = errorMessage
@@ -26,13 +31,20 @@ export const useGoalsStore = defineStore('goals', () => {
     }
   }
 
-  const createGoal = async (goalData: Omit<Goal, 'id'>): Promise<DocumentReference<DocumentData>> => {
+  const createGoal = async (goalData: Omit<Goal, 'id'>): Promise<DocumentReference<DocumentData> | { id: string }> => {
     const authStore = useAuthStore()
-    if (!authStore.user) throw new Error('User not authenticated')
+    if (!authStore.isAuthenticated) throw new Error('User not authenticated')
 
     error.value = null
     try {
-      const docRef = await addGoal(authStore.user.uid, goalData)
+      let docRef: DocumentReference<DocumentData> | { id: string }
+      if (authStore.localMode) {
+        docRef = await addGoalLocal(goalData)
+      } else if (authStore.user) {
+        docRef = await addGoalFirebase(authStore.user.uid, goalData)
+      } else {
+        throw new Error('User not authenticated')
+      }
       await fetchGoals() // Refresh list
       return docRef
     } catch (err) {
@@ -45,11 +57,17 @@ export const useGoalsStore = defineStore('goals', () => {
 
   const updateGoalData = async (goalId: string, updates: Partial<Goal>): Promise<void> => {
     const authStore = useAuthStore()
-    if (!authStore.user) throw new Error('User not authenticated')
+    if (!authStore.isAuthenticated) throw new Error('User not authenticated')
 
     error.value = null
     try {
-      await updateGoal(authStore.user.uid, goalId, updates)
+      if (authStore.localMode) {
+        await updateGoalLocal(goalId, updates)
+      } else if (authStore.user) {
+        await updateGoalFirebase(authStore.user.uid, goalId, updates)
+      } else {
+        throw new Error('User not authenticated')
+      }
       await fetchGoals() // Refresh list
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update goal'
@@ -61,11 +79,17 @@ export const useGoalsStore = defineStore('goals', () => {
 
   const removeGoal = async (goalId: string): Promise<void> => {
     const authStore = useAuthStore()
-    if (!authStore.user) throw new Error('User not authenticated')
+    if (!authStore.isAuthenticated) throw new Error('User not authenticated')
 
     error.value = null
     try {
-      await deleteGoal(authStore.user.uid, goalId)
+      if (authStore.localMode) {
+        await deleteGoalLocal(goalId)
+      } else if (authStore.user) {
+        await deleteGoalFirebase(authStore.user.uid, goalId)
+      } else {
+        throw new Error('User not authenticated')
+      }
       await fetchGoals() // Refresh list
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete goal'
