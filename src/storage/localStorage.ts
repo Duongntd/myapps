@@ -26,6 +26,28 @@ const timestampToDate = (ts: Timestamp | { seconds: number; nanoseconds?: number
   return new Date(ts.seconds * 1000)
 }
 
+// Helper to create a Timestamp-like object with toDate() method from plain object
+const normalizeTimestamp = (ts: Timestamp | { seconds: number; nanoseconds?: number }): Timestamp & { toDate: () => Date } => {
+  const normalized = {
+    seconds: ts.seconds,
+    nanoseconds: ts.nanoseconds || 0,
+    toDate: () => new Date(ts.seconds * 1000)
+  } as Timestamp & { toDate: () => Date }
+  
+  return normalized
+}
+
+// Helper to normalize Timestamp fields in an object
+const normalizeTimestamps = <T extends Record<string, any>>(obj: T, timestampFields: (keyof T)[]): T => {
+  const normalized = { ...obj }
+  for (const field of timestampFields) {
+    if (normalized[field] && typeof normalized[field] === 'object' && 'seconds' in normalized[field]) {
+      normalized[field] = normalizeTimestamp(normalized[field] as Timestamp) as T[keyof T]
+    }
+  }
+  return normalized
+}
+
 // Reading Sessions
 export const getReadingSessions = async (): Promise<ReadingSession[]> => {
   try {
@@ -33,8 +55,12 @@ export const getReadingSessions = async (): Promise<ReadingSession[]> => {
     if (!stored) return []
     
     const sessions: ReadingSession[] = JSON.parse(stored)
+    // Normalize Timestamps to have toDate() method
+    const normalized = sessions.map(session => 
+      normalizeTimestamps(session, ['date', 'startTime', 'endTime', 'createdAt'])
+    )
     // Sort by date descending
-    return sessions.sort((a, b) => {
+    return normalized.sort((a, b) => {
       const dateA = timestampToDate(a.date)
       const dateB = timestampToDate(b.date)
       return dateB.getTime() - dateA.getTime()
@@ -99,8 +125,12 @@ export const getBooks = async (): Promise<Book[]> => {
     if (!stored) return []
     
     const books: Book[] = JSON.parse(stored)
+    // Normalize Timestamps to have toDate() method
+    const normalized = books.map(book => 
+      normalizeTimestamps(book, ['startDate', 'completedDate', 'createdAt'])
+    )
     // Sort by createdAt descending
-    return books.sort((a, b) => {
+    return normalized.sort((a, b) => {
       if (!a.createdAt || !b.createdAt) return 0
       const dateA = timestampToDate(a.createdAt)
       const dateB = timestampToDate(b.createdAt)
