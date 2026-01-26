@@ -240,6 +240,25 @@
     "warning": "You are using the app in local mode. Your data is stored only in your browser.",
     "warningPoint1": "Data will be lost if you clear your browser cache",
     "warningPoint2": "Data will not sync across devices",
-    "warningPoint3": "Sign in with Google to sync your data across devices"
+    "warningPoint3": "Sign in with Google to sync your data across devices",
+    "indicator": "Local Mode",
+    "title": "Local Mode",
+    "description": "Your data is stored locally in your browser",
+    "signInWithGoogle": "Sign in with Google",
+    "clearLocalMemory": "Clear local memory",
+    "clearConfirm": "Are you sure you want to clear all local data? This action cannot be undone.",
+    "syncing": "Syncing data...",
+    "syncSuccess": "Data synced successfully!",
+    "syncError": "Failed to sync data. Please try again.",
+    "syncConflict": {
+      "title": "Data Conflict",
+      "message": "Your account already has data. How would you like to proceed?",
+      "useAccount": "Use account data",
+      "useAccountDesc": "Keep your existing account data and discard local data",
+      "useLocal": "Use local data",
+      "useLocalDesc": "Replace account data with your local data",
+      "merge": "Merge both",
+      "mergeDesc": "Keep all data from both sources"
+    }
   }
 }

@@ -240,6 +240,25 @@
     "warning": "Bạn đang sử dụng ứng dụng ở chế độ cục bộ. Dữ liệu của bạn chỉ được lưu trong trình duyệt.",
     "warningPoint1": "Dữ liệu sẽ bị mất nếu bạn xóa bộ nhớ cache của trình duyệt",
     "warningPoint2": "Dữ liệu sẽ không đồng bộ giữa các thiết bị",
-    "warningPoint3": "Đăng nhập bằng Google để đồng bộ dữ liệu giữa các thiết bị"
+    "warningPoint3": "Đăng nhập bằng Google để đồng bộ dữ liệu giữa các thiết bị",
+    "indicator": "Chế độ cục bộ",
+    "title": "Chế độ cục bộ",
+    "description": "Dữ liệu của bạn được lưu cục bộ trong trình duyệt",
+    "signInWithGoogle": "Đăng nhập bằng Google",
+    "clearLocalMemory": "Xóa dữ liệu cục bộ",
+    "clearConfirm": "Bạn có chắc chắn muốn xóa tất cả dữ liệu cục bộ? Hành động này không thể hoàn tác.",
+    "syncing": "Đang đồng bộ dữ liệu...",
+    "syncSuccess": "Đồng bộ dữ liệu thành công!",
+    "syncError": "Không thể đồng bộ dữ liệu. Vui lòng thử lại.",
+    "syncConflict": {
+      "title": "Xung đột dữ liệu",
+      "message": "Tài khoản của bạn đã có dữ liệu. Bạn muốn xử lý như thế nào?",
+      "useAccount": "Sử dụng dữ liệu tài khoản",
+      "useAccountDesc": "Giữ dữ liệu tài khoản hiện có và bỏ dữ liệu cục bộ",
+      "useLocal": "Sử dụng dữ liệu cục bộ",
+      "useLocalDesc": "Thay thế dữ liệu tài khoản bằng dữ liệu cục bộ",
+      "merge": "Gộp cả hai",
+      "mergeDesc": "Giữ tất cả dữ liệu từ cả hai nguồn"
+    }
   }
 }
