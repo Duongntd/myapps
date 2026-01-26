@@ -1,0 +1,97 @@
+name: MyApps Issue (MA)
+description: Create an issue for the MyApps platform (main app level)
+title: "MA: [Issue Title]"
+labels: ["bug", "enhancement", "documentation", "question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Note**: This template is for issues related to the MyApps platform (main app level).
+        Please use the "RT: ReadTracker Issue" template for ReadTracker-specific issues.
+        
+        **Issue Format**: The title should start with "MA:" followed by a colon and the issue title.
+        Example: "MA: Add new app to home page"
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue is this?
+      options:
+        - Bug
+        - Enhancement
+        - Documentation
+        - Question
+        - Feature Request
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Provide a clear and detailed description of the issue
+      placeholder: Describe the issue, what you expected to happen, and what actually happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce (if applicable)
+      description: If this is a bug, please provide steps to reproduce the issue
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: A clear description of what you expected to happen.
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: A clear description of what actually happened.
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (if applicable)
+      description: Add screenshots to help explain your issue
+      placeholder: Drag and drop images here or paste image URLs
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide information about your environment
+      placeholder: |
+        - OS: [e.g., macOS, Windows, Linux]
+        - Browser: [e.g., Chrome, Firefox, Safari]
+        - Version: [e.g., 1.0.0]
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, links, or information about the issue here
+      placeholder: Any additional information that might be helpful
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have provided all relevant information
+          required: true
+        - label: I have included screenshots if applicable
+          required: false
