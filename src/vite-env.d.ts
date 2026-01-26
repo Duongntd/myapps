@@ -8,7 +8,8 @@ declare module '*.vue' {
 
 interface ImportMetaEnv {
   readonly VITE_APP_VERSION: string
-  readonly VITE_BUILD_TIME: string
+  readonly VITE_RELEASE_TIME: string
+  readonly VITE_RELEASE_NOTES: string
 }
 
 interface ImportMeta {

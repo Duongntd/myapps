@@ -1,23 +1,25 @@
 /**
  * Version tracking utility
- * Provides app version information from package.json and build metadata
+ * Provides app version information from package.json and release metadata
  */
 
 // Version will be injected by Vite during build
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0'
-export const BUILD_TIME = import.meta.env.VITE_BUILD_TIME || new Date().toISOString()
+export const RELEASE_TIME = import.meta.env.VITE_RELEASE_TIME || new Date().toISOString()
+export const RELEASE_NOTES = import.meta.env.VITE_RELEASE_NOTES || ''
 
 export interface VersionInfo {
   version: string
-  buildTime: string
-  buildDate: string
+  releaseTime: string
+  releaseDate: string
+  releaseNotes: string
 }
 
 /**
  * Get complete version information
  */
 export function getVersionInfo(): VersionInfo {
-  const buildDate = new Date(BUILD_TIME).toLocaleDateString('en-US', {
+  const releaseDate = new Date(RELEASE_TIME).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -27,8 +29,9 @@ export function getVersionInfo(): VersionInfo {
 
   return {
     version: APP_VERSION,
-    buildTime: BUILD_TIME,
-    buildDate
+    releaseTime: RELEASE_TIME,
+    releaseDate,
+    releaseNotes: RELEASE_NOTES
   }
 }
 
@@ -40,9 +43,22 @@ export function getVersionString(): string {
 }
 
 /**
- * Get formatted version with build date
+ * Get formatted version with release date
  */
-export function getVersionWithBuildDate(): string {
+export function getVersionWithReleaseDate(): string {
   const info = getVersionInfo()
-  return `${getVersionString()} (Built: ${info.buildDate})`
+  return `${getVersionString()} (Released: ${info.releaseDate})`
+}
+
+/**
+ * Get release notes formatted for display
+ * Converts markdown-style newlines to HTML line breaks
+ */
+export function getFormattedReleaseNotes(): string {
+  if (!RELEASE_NOTES) return ''
+  // Convert \n to actual newlines and escape HTML
+  return RELEASE_NOTES
+    .replace(/\\n/g, '\n')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }

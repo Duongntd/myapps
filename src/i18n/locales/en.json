@@ -214,7 +214,8 @@
     "about": "About",
     "aboutDesc": "Read Tracker - Track your reading time and build better reading habits.",
     "version": "Version",
-    "buildDate": "Build Date"
+    "releaseDate": "Release Date",
+    "releaseNotes": "Release Notes"
   },
   "language": {
     "selectLanguage": "Select Language",

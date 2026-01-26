@@ -214,7 +214,8 @@
     "about": "Giới thiệu",
     "aboutDesc": "Read Tracker - Theo dõi thời gian đọc sách và xây dựng thói quen đọc tốt hơn.",
     "version": "Phiên bản",
-    "buildDate": "Ngày xây dựng"
+    "releaseDate": "Ngày phát hành",
+    "releaseNotes": "Ghi chú phát hành"
   },
   "language": {
     "selectLanguage": "Chọn ngôn ngữ",
