@@ -117,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     isAuthenticated,
     localMode,
+    syncingFromLocal,
     enableLocalMode,
     disableLocalMode,
     login,

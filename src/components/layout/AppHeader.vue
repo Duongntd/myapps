@@ -19,8 +19,8 @@
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>
           </div>
           <GoogleLoginButton v-else-if="!authStore.isAuthenticated && !authStore.localMode" />
-          <LocalModeProfile v-else-if="authStore.localMode && !authStore.user" />
-          <UserProfile v-else-if="authStore.user" />
+          <LocalModeProfile v-else-if="authStore.localMode || authStore.syncingFromLocal" />
+          <UserProfile v-else-if="authStore.user && !authStore.syncingFromLocal" />
         </nav>
       </div>
     </div>

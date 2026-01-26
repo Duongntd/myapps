@@ -70,22 +70,24 @@
       </div>
     </div>
 
-    <!-- Sync Conflict Modal -->
-    <SyncConflictModal
-      :show="showSyncModal"
-      @strategy="handleSyncStrategy"
-      @cancel="handleSyncCancel"
-    />
+    <!-- Sync Conflict Modal - Use Teleport to ensure it's always rendered -->
+    <Teleport to="body">
+      <SyncConflictModal
+        :show="showSyncModal"
+        @strategy="handleSyncStrategy"
+        @cancel="handleSyncCancel"
+      />
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useClickOutside } from '@/composables/useClickOutside'
 import { useI18n } from 'vue-i18n'
 import SyncConflictModal from './SyncConflictModal.vue'
-import { checkAccountHasData, syncLocalToFirebase, type SyncStrategy } from '@/utils/dataSync'
+import { syncLocalToFirebase, type SyncStrategy } from '@/utils/dataSync'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -114,8 +116,11 @@ const handleSignIn = async (): Promise<void> => {
     
     // Always show sync modal when logging in from local mode
     // User should decide what to do with local data
+    // Use nextTick to ensure component is still mounted and DOM is updated
+    await nextTick()
     showSyncModal.value = true
     syncing.value = false
+    console.log('Sync modal should be visible:', showSyncModal.value, 'syncingFromLocal:', authStore.syncingFromLocal)
   } catch (error) {
     console.error('Sign in error:', error)
     syncing.value = false
