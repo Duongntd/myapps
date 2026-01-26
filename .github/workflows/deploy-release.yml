@@ -28,25 +28,7 @@ jobs:
           # Remove 'v' prefix if present
           VERSION="${VERSION#v}"
           
-          # Detect version prefix (ma- or rt-)
-          PREFIX=""
-          CLEAN_VERSION="$VERSION"
-          
-          if [[ "$VERSION" =~ ^ma- ]]; then
-            PREFIX="ma"
-            CLEAN_VERSION="${VERSION#ma-}"
-            # Remove 'v' prefix if present after removing ma- prefix
-            CLEAN_VERSION="${CLEAN_VERSION#v}"
-          elif [[ "$VERSION" =~ ^rt- ]]; then
-            PREFIX="rt"
-            CLEAN_VERSION="${VERSION#rt-}"
-            # Remove 'v' prefix if present after removing rt- prefix
-            CLEAN_VERSION="${CLEAN_VERSION#v}"
-          fi
-          
-          echo "version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
-          echo "original_version=$VERSION" >> $GITHUB_OUTPUT
-          echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
           
           # Get release notes and escape for JSON
@@ -86,75 +68,12 @@ jobs:
           # Clean up
           rm -f /tmp/firebase-config.json
 
-      - name: Prepare version environment variables
-        id: version-env
-        run: |
-          PREFIX="${{ steps.release.outputs.prefix }}"
-          VERSION="${{ steps.release.outputs.version }}"
-          RELEASE_TIME="${{ github.event.release.published_at }}"
-          NOTES="${{ steps.release.outputs.notes }}"
-          
-          # Initialize MA values (default for backward compatibility)
-          MA_VERSION="$VERSION"
-          MA_RELEASE_TIME="$RELEASE_TIME"
-          MA_RELEASE_NOTES=""
-          
-          # Initialize RT values - only update when prefix is "rt"
-          # When prefix is "ma", RT values should not be updated (keep previous/separate)
-          RT_VERSION=""
-          RT_RELEASE_TIME=""
-          RT_RELEASE_NOTES=""
-          
-          # Update based on prefix
-          if [ "$PREFIX" = "ma" ]; then
-            # Update MA version info
-            MA_VERSION="$VERSION"
-            MA_RELEASE_TIME="$RELEASE_TIME"
-            MA_RELEASE_NOTES="$NOTES"
-            # RT values remain empty (will use defaults from version.ts)
-          elif [ "$PREFIX" = "rt" ]; then
-            # Update RT version info only
-            RT_VERSION="$VERSION"
-            RT_RELEASE_TIME="$RELEASE_TIME"
-            RT_RELEASE_NOTES="$NOTES"
-            # MA values remain unchanged (RT releases should NOT update MA version)
-          fi
-          
-          # Escape release notes for output
-          MA_RELEASE_NOTES_ESCAPED=$(echo "$MA_RELEASE_NOTES" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-          RT_RELEASE_NOTES_ESCAPED=$(echo "$RT_RELEASE_NOTES" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-          
-          echo "ma_version=$MA_VERSION" >> $GITHUB_OUTPUT
-          echo "ma_release_time=$MA_RELEASE_TIME" >> $GITHUB_OUTPUT
-          echo "ma_release_notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$MA_RELEASE_NOTES_ESCAPED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          # Only output RT version info if prefix is "rt" (to prevent RT version from updating on MA releases)
-          # When prefix is not "rt", don't output RT values at all so they remain undefined
-          if [ "$PREFIX" = "rt" ]; then
-            echo "rt_version=$RT_VERSION" >> $GITHUB_OUTPUT
-            echo "rt_release_time=$RT_RELEASE_TIME" >> $GITHUB_OUTPUT
-            echo "rt_release_notes<<EOF" >> $GITHUB_OUTPUT
-            echo "$RT_RELEASE_NOTES_ESCAPED" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
-          # When prefix is not "rt", RT values are not output, so they'll be undefined in build step
 
       - name: Build with version and release notes
         env:
           VITE_APP_VERSION: ${{ steps.release.outputs.version }}
           VITE_RELEASE_TIME: ${{ github.event.release.published_at }}
           VITE_RELEASE_NOTES: ${{ steps.release.outputs.notes }}
-          VITE_MA_VERSION: ${{ steps.version-env.outputs.ma_version }}
-          VITE_MA_RELEASE_TIME: ${{ steps.version-env.outputs.ma_release_time }}
-          VITE_MA_RELEASE_NOTES: ${{ steps.version-env.outputs.ma_release_notes }}
-          # Only set RT env vars if they exist (when prefix is "rt")
-          # When prefix is "ma", RT values are not output, so they'll be undefined here
-          # This prevents RT version/date from updating on MA releases
-          VITE_RT_VERSION: ${{ steps.version-env.outputs.rt_version }}
-          VITE_RT_RELEASE_TIME: ${{ steps.version-env.outputs.rt_release_time }}
-          VITE_RT_RELEASE_NOTES: ${{ steps.version-env.outputs.rt_release_notes }}
           VITE_FIREBASE_API_KEY: ${{ steps.firebase-config.outputs.api_key }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ steps.firebase-config.outputs.auth_domain }}
           VITE_FIREBASE_PROJECT_ID: ${{ steps.firebase-config.outputs.project_id }}
