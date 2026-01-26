@@ -1,23 +1,23 @@
 <template>
-  <div class="home-page">
-    <div class="hero-section">
-      <h1 class="hero-title">Welcome to MyApps</h1>
-      <p class="hero-subtitle">A collection of useful applications</p>
+  <div class="py-8">
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Welcome to MyApps</h1>
+      <p class="text-xl text-gray-600">A collection of useful applications</p>
     </div>
 
-    <div class="apps-grid">
-      <div 
-        v-for="app in apps" 
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        v-for="app in apps"
         :key="app.id"
-        class="app-card"
+        class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer border border-gray-200 hover:border-primary-300"
         @click="navigateToApp(app.route)"
       >
-        <div class="app-icon">
-          <span class="icon-emoji">{{ app.icon }}</span>
-        </div>
-        <h2 class="app-title">{{ app.name }}</h2>
-        <p class="app-description">{{ app.description }}</p>
-        <button class="app-button">Open App</button>
+        <div class="text-5xl mb-4">{{ app.icon }}</div>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-2">{{ app.name }}</h2>
+        <p class="text-gray-600 mb-4 leading-relaxed">{{ app.description }}</p>
+        <button class="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors">
+          Open App
+        </button>
       </div>
     </div>
   </div>
@@ -52,100 +52,3 @@ const navigateToApp = (route: string): void => {
   router.push(route)
 }
 </script>
-
-<style scoped>
-.home-page {
-  padding: 2rem 0;
-}
-
-.hero-section {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.hero-title {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 0.5rem;
-}
-
-.hero-subtitle {
-  font-size: 1.25rem;
-  color: #666;
-}
-
-.apps-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-.app-card {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-}
-
-.app-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.app-icon {
-  margin-bottom: 1rem;
-}
-
-.icon-emoji {
-  font-size: 3rem;
-  display: inline-block;
-}
-
-.app-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 0.75rem;
-}
-
-.app-description {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-}
-
-.app-button {
-  background-color: #6366f1;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  width: 100%;
-}
-
-.app-button:hover {
-  background-color: #4f46e5;
-}
-
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 2rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-
-  .apps-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-</style>

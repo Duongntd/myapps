@@ -19,8 +19,12 @@ dist-ssr/
 .env
 .env.local
 .env.production.local
+.env.development.local
 
 # Firebase
 .firebase/
 firebase-debug.log
 firestore-debug.log
+
+# Firebase config (if accidentally committed)
+src/firebase/config.local.ts

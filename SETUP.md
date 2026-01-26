@@ -46,19 +46,24 @@ npm install
 
 ### 2.5 Update Firebase Config
 
-1. Open `src/firebase/config.ts`
-2. Replace the placeholder values with your actual Firebase config:
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
 
-```typescript
-const firebaseConfig = {
-  apiKey: "your-actual-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "your-app-id"
-}
+2. Open `.env` and replace the placeholder values with your actual Firebase config from step 2.4:
+
+```env
+VITE_FIREBASE_API_KEY=your-actual-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 ```
+
+**Important:** The `.env` file is already in `.gitignore` and will not be committed to version control. Never commit your actual Firebase credentials!
 
 ## Step 3: Set Up Firestore Security Rules
 

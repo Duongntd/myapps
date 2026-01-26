@@ -1,7 +1,7 @@
 <template>
-  <div class="app-layout">
+  <div class="min-h-screen flex flex-col">
     <AppHeader />
-    <main class="main-content">
+    <main class="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
       <slot />
     </main>
   </div>
@@ -10,25 +10,3 @@
 <script setup lang="ts">
 import AppHeader from './AppHeader.vue'
 </script>
-
-<style scoped>
-.app-layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-@media (max-width: 768px) {
-  .main-content {
-    padding: 1rem;
-  }
-}
-</style>

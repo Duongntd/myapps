@@ -1,21 +1,9 @@
 <template>
-  <div class="settings-page">
-    <h2>Settings</h2>
-    <p class="coming-soon">Coming soon - Configure reminders and preferences here.</p>
+  <div class="py-4">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Settings</h2>
+    <p class="text-gray-600 italic">Coming soon - Configure reminders and preferences here.</p>
   </div>
 </template>
 
 <script setup lang="ts">
 </script>
-
-<style scoped>
-.settings-page {
-  padding: 1rem 0;
-}
-
-.coming-soon {
-  color: #666;
-  margin-top: 1rem;
-  font-style: italic;
-}
-</style>

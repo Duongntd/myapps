@@ -1,21 +1,9 @@
 <template>
-  <div class="goals-page">
-    <h2>Reading Goals</h2>
-    <p class="coming-soon">Coming soon - Set and track your reading goals here.</p>
+  <div class="py-4">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Reading Goals</h2>
+    <p class="text-gray-600 italic">Coming soon - Set and track your reading goals here.</p>
   </div>
 </template>
 
 <script setup lang="ts">
 </script>
-
-<style scoped>
-.goals-page {
-  padding: 1rem 0;
-}
-
-.coming-soon {
-  color: #666;
-  margin-top: 1rem;
-  font-style: italic;
-}
-</style>

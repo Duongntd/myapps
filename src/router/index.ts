@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import Home from '@/views/Home.vue'
 import ReadTrackerLayout from '@/views/ReadTracker/ReadTrackerLayout.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -11,6 +12,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/read-tracker',
     component: ReadTrackerLayout,
+    meta: { requiresAuth: true },
     children: [
       {
         path: '',
@@ -49,6 +51,34 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// Authentication guard
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // Wait for auth to initialize
+  if (authStore.loading) {
+    // Wait a bit for auth to initialize
+    const checkAuth = () => {
+      if (!authStore.loading) {
+        if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+          next({ name: 'home' })
+        } else {
+          next()
+        }
+      } else {
+        setTimeout(checkAuth, 100)
+      }
+    }
+    checkAuth()
+  } else {
+    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+      next({ name: 'home' })
+    } else {
+      next()
+    }
+  }
 })
 
 export default router
