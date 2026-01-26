@@ -9,6 +9,10 @@ import {
 } from 'firebase/auth'
 
 const googleProvider = new GoogleAuthProvider()
+// Force account selection every time
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+})
 
 export const signInWithGoogle = async (): Promise<User> => {
   try {
