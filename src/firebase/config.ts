@@ -1,6 +1,7 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
 import { getFirestore, type Firestore } from 'firebase/firestore'
+import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics'
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -27,4 +28,15 @@ const app: FirebaseApp = initializeApp(firebaseConfig)
 export const auth: Auth = getAuth(app)
 export const db: Firestore = getFirestore(app)
 
+// Initialize Analytics (only in browser environment and if supported)
+let analytics: Analytics | null = null
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      analytics = getAnalytics(app)
+    }
+  })
+}
+
+export { analytics }
 export default app
