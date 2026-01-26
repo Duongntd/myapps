@@ -7,16 +7,20 @@ import type { DocumentReference, DocumentData } from 'firebase/firestore'
 export const useGoalsStore = defineStore('goals', () => {
   const goals: Ref<Goal[]> = ref([])
   const loading: Ref<boolean> = ref(false)
+  const error: Ref<string | null> = ref(null)
 
   const fetchGoals = async (): Promise<void> => {
     const authStore = useAuthStore()
     if (!authStore.user) return
 
     loading.value = true
+    error.value = null
     try {
       goals.value = await getGoals(authStore.user.uid)
-    } catch (error) {
-      console.error('Error fetching goals:', error)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load goals'
+      error.value = errorMessage
+      console.error('Error fetching goals:', err)
     } finally {
       loading.value = false
     }
@@ -26,13 +30,16 @@ export const useGoalsStore = defineStore('goals', () => {
     const authStore = useAuthStore()
     if (!authStore.user) throw new Error('User not authenticated')
 
+    error.value = null
     try {
       const docRef = await addGoal(authStore.user.uid, goalData)
       await fetchGoals() // Refresh list
       return docRef
-    } catch (error) {
-      console.error('Error creating goal:', error)
-      throw error
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create goal'
+      error.value = errorMessage
+      console.error('Error creating goal:', err)
+      throw err
     }
   }
 
@@ -40,12 +47,15 @@ export const useGoalsStore = defineStore('goals', () => {
     const authStore = useAuthStore()
     if (!authStore.user) throw new Error('User not authenticated')
 
+    error.value = null
     try {
       await updateGoal(authStore.user.uid, goalId, updates)
       await fetchGoals() // Refresh list
-    } catch (error) {
-      console.error('Error updating goal:', error)
-      throw error
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update goal'
+      error.value = errorMessage
+      console.error('Error updating goal:', err)
+      throw err
     }
   }
 
@@ -53,18 +63,22 @@ export const useGoalsStore = defineStore('goals', () => {
     const authStore = useAuthStore()
     if (!authStore.user) throw new Error('User not authenticated')
 
+    error.value = null
     try {
       await deleteGoal(authStore.user.uid, goalId)
       await fetchGoals() // Refresh list
-    } catch (error) {
-      console.error('Error deleting goal:', error)
-      throw error
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete goal'
+      error.value = errorMessage
+      console.error('Error deleting goal:', err)
+      throw err
     }
   }
 
   return {
     goals,
     loading,
+    error,
     fetchGoals,
     createGoal,
     updateGoalData,

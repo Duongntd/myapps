@@ -1,20 +1,20 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Header -->
-    <div class="bg-white rounded-lg shadow p-6">
-      <div class="flex justify-between items-center">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
         <div>
-          <h2 class="text-2xl font-semibold text-gray-900">Reading Goals</h2>
-          <p class="text-sm text-gray-600 mt-1">Set and track your reading goals</p>
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Reading Goals</h2>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1">Set and track your reading goals</p>
         </div>
         <button
           @click="showForm = true"
-          class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+          class="bg-primary-600 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          Add Goal
+          <span>Add Goal</span>
         </button>
       </div>
     </div>
@@ -29,24 +29,43 @@
 
     <!-- Active Goals -->
     <div class="bg-white rounded-lg shadow">
-      <div class="p-6 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900">Active Goals</h3>
+      <div class="p-4 sm:p-6 border-b border-gray-200">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">Active Goals</h3>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="goalsStore.error && !goalsStore.loading" class="p-4 sm:p-6 bg-red-50 border border-red-200 rounded-lg mx-4 sm:mx-6 my-4">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-red-800">Error loading goals</p>
+            <p class="text-xs sm:text-sm text-red-600 mt-1">{{ goalsStore.error }}</p>
+            <button
+              @click="goalsStore.fetchGoals()"
+              class="mt-2 text-xs sm:text-sm text-red-700 underline hover:text-red-800"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Loading State -->
-      <div v-if="goalsStore.loading" class="p-12 text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-        <p class="text-gray-600">Loading goals...</p>
+      <div v-if="goalsStore.loading" class="p-8 sm:p-12 text-center">
+        <div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+        <p class="text-sm sm:text-base text-gray-600">Loading goals...</p>
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="activeGoals.length === 0" class="p-12 text-center">
-        <div class="text-6xl mb-4">🎯</div>
-        <p class="text-gray-600 text-lg mb-2">No active goals</p>
+      <div v-else-if="activeGoals.length === 0" class="p-8 sm:p-12 text-center">
+        <div class="text-5xl sm:text-6xl mb-4">🎯</div>
+        <p class="text-gray-600 text-base sm:text-lg mb-2">No active goals</p>
         <p class="text-gray-500 text-sm mb-4">Set a reading goal to track your progress!</p>
         <button
           @click="showForm = true"
-          class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+          class="bg-primary-600 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors touch-manipulation"
         >
           Create Your First Goal
         </button>
@@ -57,31 +76,31 @@
         <div
           v-for="goal in activeGoals"
           :key="goal.id"
-          class="p-6"
+          class="p-4 sm:p-6"
         >
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex-1">
-              <div class="flex items-center gap-3 mb-2">
-                <h4 class="text-lg font-semibold text-gray-900">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                <h4 class="text-base sm:text-lg font-semibold text-gray-900">
                   {{ formatGoalType(goal.type) }} Goal
                 </h4>
                 <span
                   :class="[
-                    'px-2 py-1 text-xs font-medium rounded',
+                    'px-2 py-1 text-xs font-medium rounded inline-block w-fit',
                     getStatusClass(goal)
                   ]"
                 >
                   {{ getGoalStatus(goal) }}
                 </span>
               </div>
-              <p class="text-sm text-gray-600">
+              <p class="text-xs sm:text-sm text-gray-600">
                 Target: {{ formatDuration(goal.targetMinutes) }} per {{ goal.type === 'daily' ? 'day' : goal.type === 'weekly' ? 'week' : goal.type === 'monthly' ? 'month' : 'year' }}
               </p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-shrink-0">
               <button
                 @click="editGoal(goal)"
-                class="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                class="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors touch-manipulation"
                 title="Edit goal"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +109,7 @@
               </button>
               <button
                 @click="deleteGoal(goal.id!)"
-                class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors touch-manipulation"
                 title="Delete goal"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,17 +121,17 @@
 
           <!-- Progress Bar -->
           <div class="mb-2">
-            <div class="flex justify-between items-center mb-1">
-              <span class="text-sm text-gray-600">Progress</span>
-              <span class="text-sm font-semibold text-gray-900">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 mb-1">
+              <span class="text-xs sm:text-sm text-gray-600">Progress</span>
+              <span class="text-xs sm:text-sm font-semibold text-gray-900">
                 {{ formatDuration(goalProgress(goal).current) }} / {{ formatDuration(goal.targetMinutes) }}
                 ({{ Math.round(goalProgress(goal).percentage) }}%)
               </span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="w-full bg-gray-200 rounded-full h-2 sm:h-3">
               <div
                 :class="[
-                  'h-3 rounded-full transition-all',
+                  'h-2 sm:h-3 rounded-full transition-all',
                   goalProgress(goal).percentage >= 100 ? 'bg-green-500' : 'bg-primary-600'
                 ]"
                 :style="{ width: `${Math.min(goalProgress(goal).percentage, 100)}%` }"

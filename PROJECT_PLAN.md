@@ -314,7 +314,7 @@ users/{userId}/
 
 ---
 
-### Milestone 7: Reminders & Notifications (Week 4)
+### Milestone 7 (postponed): Reminders & Notifications (Week 4)
 - [ ] Create reminder settings page
 - [ ] Implement browser notification permission request
 - [ ] Set up daily reminder logic
@@ -330,7 +330,7 @@ users/{userId}/
 - [ ] Add loading states and error handling
 - [ ] Implement data caching for better performance
 - [ ] Optimize Firestore queries
-- [ ] Add responsive design improvements
+- [ ] Add responsive design improvements, optimized for mobile screen
 - [ ] Implement offline support (optional - PWA)
 - [ ] Add data export functionality (optional)
 - [ ] Performance optimization

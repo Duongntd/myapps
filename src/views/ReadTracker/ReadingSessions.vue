@@ -1,28 +1,28 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Header with Today's Reading Time -->
-    <div class="bg-white rounded-lg shadow p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-2xl font-semibold text-gray-900">Reading Sessions</h2>
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Reading Sessions</h2>
         <button
           @click="showForm = true"
-          class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+          class="bg-primary-600 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          Add Session
+          <span>Add Session</span>
         </button>
       </div>
       
       <!-- Today's Reading Time -->
-      <div class="bg-primary-50 rounded-lg p-4">
+      <div class="bg-primary-50 rounded-lg p-3 sm:p-4">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600">Today's Reading Time</p>
-            <p class="text-3xl font-bold text-primary-700">{{ formatDuration(todayTotalMinutes) }}</p>
+            <p class="text-xs sm:text-sm text-gray-600">Today's Reading Time</p>
+            <p class="text-2xl sm:text-3xl font-bold text-primary-700">{{ formatDuration(todayTotalMinutes) }}</p>
           </div>
-          <div class="text-4xl">📖</div>
+          <div class="text-3xl sm:text-4xl">📖</div>
         </div>
       </div>
     </div>
@@ -37,35 +37,52 @@
 
     <!-- Sessions List -->
     <div class="bg-white rounded-lg shadow">
-      <div class="p-6 border-b border-gray-200">
-        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <h3 class="text-lg font-semibold text-gray-900">Session History</h3>
-          <div class="flex gap-2">
-            <select
-              v-model="dateFilter"
-              @change="applyFilters"
-              class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+      <div class="p-4 sm:p-6 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900">Session History</h3>
+          <select
+            v-model="dateFilter"
+            @change="applyFilters"
+            class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 touch-manipulation"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="sessionsStore.error && !sessionsStore.loading" class="p-4 sm:p-6 bg-red-50 border border-red-200 rounded-lg mx-4 sm:mx-6 my-4">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-red-800">Error loading sessions</p>
+            <p class="text-xs sm:text-sm text-red-600 mt-1">{{ sessionsStore.error }}</p>
+            <button
+              @click="sessionsStore.fetchSessions()"
+              class="mt-2 text-xs sm:text-sm text-red-700 underline hover:text-red-800"
             >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </select>
+              Try again
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Loading State -->
-      <div v-if="sessionsStore.loading" class="p-12 text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-        <p class="text-gray-600">Loading sessions...</p>
+      <div v-if="sessionsStore.loading" class="p-8 sm:p-12 text-center">
+        <div class="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+        <p class="text-sm sm:text-base text-gray-600">Loading sessions...</p>
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="filteredSessions.length === 0" class="p-12 text-center">
-        <div class="text-6xl mb-4">📚</div>
-        <p class="text-gray-600 text-lg mb-2">No reading sessions yet</p>
+      <div v-else-if="filteredSessions.length === 0" class="p-8 sm:p-12 text-center">
+        <div class="text-5xl sm:text-6xl mb-4">📚</div>
+        <p class="text-gray-600 text-base sm:text-lg mb-2">No reading sessions yet</p>
         <p class="text-gray-500 text-sm">Start tracking your reading by adding your first session!</p>
       </div>
 
@@ -74,27 +91,27 @@
         <div
           v-for="session in filteredSessions"
           :key="session.id"
-          class="p-6 hover:bg-gray-50 transition-colors"
+          class="p-4 sm:p-6 hover:bg-gray-50 transition-colors"
         >
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <div class="flex items-center gap-3 mb-2">
-                <span class="text-lg font-semibold text-gray-900">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                <span class="text-base sm:text-lg font-semibold text-gray-900">
                   {{ formatDate(session.date) }}
                 </span>
-                <span class="px-3 py-1 bg-primary-100 text-primary-700 rounded-lg text-sm font-medium">
+                <span class="px-2 sm:px-3 py-1 bg-primary-100 text-primary-700 rounded-lg text-xs sm:text-sm font-medium inline-block w-fit">
                   {{ formatDuration(session.duration) }}
                 </span>
               </div>
-              <div v-if="session.bookId" class="text-sm text-gray-600 mt-1">
+              <div v-if="session.bookId" class="text-xs sm:text-sm text-gray-600 mt-1">
                 <span class="text-gray-500">Book:</span>
                 <span class="ml-1">{{ getBookTitle(session.bookId) }}</span>
               </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-1 sm:gap-2 flex-shrink-0">
               <button
                 @click="editSession(session)"
-                class="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                class="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors touch-manipulation"
                 title="Edit session"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +120,7 @@
               </button>
               <button
                 @click="deleteSession(session.id!)"
-                class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                class="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors touch-manipulation"
                 title="Delete session"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

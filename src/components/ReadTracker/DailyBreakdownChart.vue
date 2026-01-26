@@ -1,5 +1,5 @@
 <template>
-  <div class="h-64">
+  <div class="h-48 sm:h-64">
     <canvas ref="chartCanvas"></canvas>
   </div>
 </template>
@@ -64,6 +64,7 @@ const createChart = () => {
   }
 
   const data = chartData.value
+  const isMobile = window.innerWidth < 640
 
   chartInstance = new Chart(chartCanvas.value, {
     type: 'bar',
@@ -75,7 +76,9 @@ const createChart = () => {
           data: data.data,
           backgroundColor: 'rgba(99, 102, 241, 0.6)',
           borderColor: 'rgb(99, 102, 241)',
-          borderWidth: 1
+          borderWidth: 1,
+          barThickness: isMobile ? 'flex' : undefined,
+          maxBarThickness: isMobile ? 20 : 40
         }
       ]
     },
@@ -102,9 +105,21 @@ const createChart = () => {
         }
       },
       scales: {
+        x: {
+          ticks: {
+            font: {
+              size: isMobile ? 10 : 12
+            },
+            maxRotation: isMobile ? 45 : 0,
+            minRotation: isMobile ? 45 : 0
+          }
+        },
         y: {
           beginAtZero: true,
           ticks: {
+            font: {
+              size: isMobile ? 10 : 12
+            },
             callback: (value) => {
               const minutes = Number(value)
               if (minutes < 60) {

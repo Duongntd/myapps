@@ -1,19 +1,20 @@
 <template>
   <header class="bg-white shadow-sm sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+      <div class="flex justify-between items-center h-14 sm:h-16">
         <router-link to="/" class="flex items-center">
-          <h1 class="text-xl font-bold text-primary-600">MyApps</h1>
+          <h1 class="text-lg sm:text-xl font-bold text-primary-600">MyApps</h1>
         </router-link>
-        <nav class="flex items-center gap-4">
+        <nav class="flex items-center gap-2 sm:gap-4">
           <router-link
             to="/"
-            class="text-gray-600 hover:text-primary-600 font-medium transition-colors"
+            class="text-sm sm:text-base text-gray-600 hover:text-primary-600 font-medium transition-colors px-2 py-1 rounded"
             active-class="text-primary-600"
           >
-            Home
+            <span class="hidden sm:inline">Home</span>
+            <span class="sm:hidden">🏠</span>
           </router-link>
-          <div v-if="authStore.loading" class="px-4">
+          <div v-if="authStore.loading" class="px-2 sm:px-4">
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>
           </div>
           <GoogleLoginButton v-else-if="!authStore.isAuthenticated" />

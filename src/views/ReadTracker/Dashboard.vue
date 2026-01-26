@@ -1,58 +1,58 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Overview Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
       <!-- Today's Reading -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">Today</h3>
-          <span class="text-2xl">📖</span>
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-1 sm:mb-2">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Today</h3>
+          <span class="text-xl sm:text-2xl">📖</span>
         </div>
-        <p class="text-3xl font-bold text-gray-900">{{ formatDuration(todayTotal) }}</p>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatDuration(todayTotal) }}</p>
         <p class="text-xs text-gray-500 mt-1">{{ todaySessions }} session{{ todaySessions !== 1 ? 's' : '' }}</p>
       </div>
 
       <!-- This Week -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">This Week</h3>
-          <span class="text-2xl">📅</span>
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-1 sm:mb-2">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Week</h3>
+          <span class="text-xl sm:text-2xl">📅</span>
         </div>
-        <p class="text-3xl font-bold text-gray-900">{{ formatDuration(weekTotal) }}</p>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatDuration(weekTotal) }}</p>
         <p class="text-xs text-gray-500 mt-1">{{ weekSessions }} session{{ weekSessions !== 1 ? 's' : '' }}</p>
       </div>
 
       <!-- This Month -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">This Month</h3>
-          <span class="text-2xl">📆</span>
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-1 sm:mb-2">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Month</h3>
+          <span class="text-xl sm:text-2xl">📆</span>
         </div>
-        <p class="text-3xl font-bold text-gray-900">{{ formatDuration(monthTotal) }}</p>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ formatDuration(monthTotal) }}</p>
         <p class="text-xs text-gray-500 mt-1">{{ monthSessions }} session{{ monthSessions !== 1 ? 's' : '' }}</p>
       </div>
 
       <!-- Reading Streak -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">Streak</h3>
-          <span class="text-2xl">🔥</span>
+      <div class="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-1 sm:mb-2">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-600">Streak</h3>
+          <span class="text-xl sm:text-2xl">🔥</span>
         </div>
-        <p class="text-3xl font-bold text-gray-900">{{ readingStreak }}</p>
-        <p class="text-xs text-gray-500 mt-1">day{{ readingStreak !== 1 ? 's' : '' }} in a row</p>
+        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ readingStreak }}</p>
+        <p class="text-xs text-gray-500 mt-1">day{{ readingStreak !== 1 ? 's' : '' }}</p>
       </div>
     </div>
 
     <!-- Stats Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <!-- Average Reading Time -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Average Reading Time</h3>
-        <div class="space-y-4">
+      <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Average Reading Time</h3>
+        <div class="space-y-3 sm:space-y-4">
           <div>
             <div class="flex justify-between items-center mb-1">
-              <span class="text-sm text-gray-600">Daily Average (This Week)</span>
-              <span class="text-lg font-semibold text-gray-900">{{ formatDuration(weekDailyAverage) }}</span>
+              <span class="text-xs sm:text-sm text-gray-600">Daily (Week)</span>
+              <span class="text-base sm:text-lg font-semibold text-gray-900">{{ formatDuration(weekDailyAverage) }}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -63,8 +63,8 @@
           </div>
           <div>
             <div class="flex justify-between items-center mb-1">
-              <span class="text-sm text-gray-600">Daily Average (This Month)</span>
-              <span class="text-lg font-semibold text-gray-900">{{ formatDuration(monthDailyAverage) }}</span>
+              <span class="text-xs sm:text-sm text-gray-600">Daily (Month)</span>
+              <span class="text-base sm:text-lg font-semibold text-gray-900">{{ formatDuration(monthDailyAverage) }}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -77,37 +77,37 @@
       </div>
 
       <!-- Books Stats -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Books</h3>
-        <div class="space-y-4">
+      <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Books</h3>
+        <div class="space-y-3 sm:space-y-4">
           <div class="flex justify-between items-center">
-            <span class="text-gray-600">Currently Reading</span>
-            <span class="text-2xl font-bold text-blue-600">{{ readingBooksCount }}</span>
+            <span class="text-sm sm:text-base text-gray-600">Reading</span>
+            <span class="text-xl sm:text-2xl font-bold text-blue-600">{{ readingBooksCount }}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-gray-600">Completed</span>
-            <span class="text-2xl font-bold text-green-600">{{ completedBooksCount }}</span>
+            <span class="text-sm sm:text-base text-gray-600">Completed</span>
+            <span class="text-xl sm:text-2xl font-bold text-green-600">{{ completedBooksCount }}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-gray-600">Want to Read</span>
-            <span class="text-2xl font-bold text-gray-600">{{ wantToReadBooksCount }}</span>
+            <span class="text-sm sm:text-base text-gray-600">Want to Read</span>
+            <span class="text-xl sm:text-2xl font-bold text-gray-600">{{ wantToReadBooksCount }}</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Goals Section -->
-    <div v-if="activeGoals.length > 0" class="bg-white rounded-lg shadow p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Active Goals</h3>
-      <div class="space-y-4">
+    <div v-if="activeGoals.length > 0" class="bg-white rounded-lg shadow p-4 sm:p-6">
+      <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Active Goals</h3>
+      <div class="space-y-3 sm:space-y-4">
         <div
           v-for="goal in activeGoals"
           :key="goal.id"
-          class="p-4 bg-gray-50 rounded-lg"
+          class="p-3 sm:p-4 bg-gray-50 rounded-lg"
         >
-          <div class="flex justify-between items-center mb-2">
-            <span class="font-medium text-gray-900">{{ formatGoalType(goal.type) }} Goal</span>
-            <span class="text-sm font-semibold text-gray-700">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
+            <span class="text-sm sm:text-base font-medium text-gray-900">{{ formatGoalType(goal.type) }} Goal</span>
+            <span class="text-xs sm:text-sm font-semibold text-gray-700">
               {{ formatDuration(goalProgress(goal).current) }} / {{ formatDuration(goal.targetMinutes) }}
             </span>
           </div>
@@ -129,15 +129,15 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <!-- Weekly Reading Chart -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">This Week's Reading</h3>
+      <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-3 sm:mb-4">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900">Reading Trends</h3>
           <select
             v-model="chartPeriod"
             @change="updateCharts"
-            class="text-sm px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 w-full sm:w-auto"
           >
             <option value="week">This Week</option>
             <option value="month">This Month</option>
@@ -148,21 +148,21 @@
       </div>
 
       <!-- Daily Breakdown -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Daily Breakdown</h3>
+      <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Daily Breakdown</h3>
         <DailyBreakdownChart :sessions="sessionsStore.sessions" :period="chartPeriod" />
       </div>
     </div>
 
     <!-- Yearly Total -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">This Year</h3>
-          <p class="text-3xl font-bold text-primary-600">{{ formatDuration(yearTotal) }}</p>
-          <p class="text-sm text-gray-500 mt-1">{{ yearSessions }} total sessions</p>
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-1">This Year</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-primary-600">{{ formatDuration(yearTotal) }}</p>
+          <p class="text-xs sm:text-sm text-gray-500 mt-1">{{ yearSessions }} total sessions</p>
         </div>
-        <div class="text-6xl">📚</div>
+        <div class="text-4xl sm:text-6xl hidden sm:block">📚</div>
       </div>
     </div>
   </div>
