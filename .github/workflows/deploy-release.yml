@@ -35,9 +35,13 @@ jobs:
           if [[ "$VERSION" =~ ^ma- ]]; then
             PREFIX="ma"
             CLEAN_VERSION="${VERSION#ma-}"
+            # Remove 'v' prefix if present after removing ma- prefix
+            CLEAN_VERSION="${CLEAN_VERSION#v}"
           elif [[ "$VERSION" =~ ^rt- ]]; then
             PREFIX="rt"
             CLEAN_VERSION="${VERSION#rt-}"
+            # Remove 'v' prefix if present after removing rt- prefix
+            CLEAN_VERSION="${CLEAN_VERSION#v}"
           fi
           
           echo "version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
@@ -90,23 +94,33 @@ jobs:
           RELEASE_TIME="${{ github.event.release.published_at }}"
           NOTES="${{ steps.release.outputs.notes }}"
           
-          # Set default values (backward compatibility)
+          # Initialize MA values (default for backward compatibility)
           MA_VERSION="$VERSION"
           MA_RELEASE_TIME="$RELEASE_TIME"
           MA_RELEASE_NOTES=""
-          RT_VERSION="$VERSION"
-          RT_RELEASE_TIME="$RELEASE_TIME"
+          
+          # Initialize RT values - only update when prefix is "rt"
+          # When prefix is "ma", RT values should not be updated (keep previous/separate)
+          RT_VERSION=""
+          RT_RELEASE_TIME=""
           RT_RELEASE_NOTES=""
           
           # Update based on prefix
           if [ "$PREFIX" = "ma" ]; then
+            # Update MA version info
             MA_VERSION="$VERSION"
             MA_RELEASE_TIME="$RELEASE_TIME"
             MA_RELEASE_NOTES="$NOTES"
+            # RT values remain empty (will use defaults from version.ts)
           elif [ "$PREFIX" = "rt" ]; then
+            # Update RT version info
             RT_VERSION="$VERSION"
             RT_RELEASE_TIME="$RELEASE_TIME"
             RT_RELEASE_NOTES="$NOTES"
+            # Also update MA to maintain backward compatibility
+            MA_VERSION="$VERSION"
+            MA_RELEASE_TIME="$RELEASE_TIME"
+            MA_RELEASE_NOTES=""
           fi
           
           # Escape release notes for output
@@ -119,11 +133,19 @@ jobs:
           echo "$MA_RELEASE_NOTES_ESCAPED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
-          echo "rt_version=$RT_VERSION" >> $GITHUB_OUTPUT
-          echo "rt_release_time=$RT_RELEASE_TIME" >> $GITHUB_OUTPUT
-          echo "rt_release_notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$RT_RELEASE_NOTES_ESCAPED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Only output RT version info if prefix is "rt" (to prevent RT version from updating on MA releases)
+          if [ "$PREFIX" = "rt" ]; then
+            echo "rt_version=$RT_VERSION" >> $GITHUB_OUTPUT
+            echo "rt_release_time=$RT_RELEASE_TIME" >> $GITHUB_OUTPUT
+            echo "rt_release_notes<<EOF" >> $GITHUB_OUTPUT
+            echo "$RT_RELEASE_NOTES_ESCAPED" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            # Output empty values so they won't be set in the build step
+            echo "rt_version=" >> $GITHUB_OUTPUT
+            echo "rt_release_time=" >> $GITHUB_OUTPUT
+            echo "rt_release_notes=" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build with version and release notes
         env:

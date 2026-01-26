@@ -86,15 +86,29 @@ After breaking down the issue, assign it:
      - Or use the repository owner if no user config found
    - If user wants agent to "assign to itself", this typically means assigning to the user (agents can't be assigned)
 
-2. **Assign via GitHub API**:
+2. **Check for authentication token**:
+   - Before making API calls, check if token is available:
+     ```bash
+     # Check for GITHUB_TOKEN environment variable
+     [ -n "$GITHUB_TOKEN" ] && echo "Token available" || echo "Token not set"
+     
+     # Alternative: Check for GitHub CLI authentication
+     gh auth status 2>/dev/null && echo "GitHub CLI authenticated" || echo "GitHub CLI not authenticated"
+     ```
+
+3. **Assign via GitHub API**:
    - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
+   - **Check token availability first**: Only attempt API call if `GITHUB_TOKEN` is set or GitHub CLI is authenticated
    - Use PATCH: `https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}`
    - Body: `{"assignees": ["username"]}`
-   - Requires authentication token
+   - Headers: `-H "Authorization: token $GITHUB_TOKEN"` (if token available)
+   - **Alternative**: Use GitHub CLI if available: `gh issue assign {issue_number} {username}`
 
-3. **Handle assignment failure**:
-   - If API assignment fails (no token or permissions), note it but continue
-   - User can manually assign later
+4. **Handle assignment failure**:
+   - If token is not available, skip API call and inform user
+   - If API assignment fails (401 Bad credentials, 403 Forbidden), note it but continue
+   - Provide manual assignment instructions: "You can assign this issue manually at: https://github.com/{owner}/{repo}/issues/{issue_number}"
+   - User can manually assign later via GitHub UI
 
 ### Step 4: Update Issue with Breakdown
 
@@ -105,13 +119,18 @@ Post the breakdown as a comment on the issue:
    - Include clear sections: Overview, Deliverables, Subtasks
    - Use checkboxes for tracking: `- [ ] Task description`
 
-2. **Post comment via GitHub API**:
+2. **Check for authentication token**:
+   - Before making API calls, verify token is available (see Step 3.2 above)
+
+3. **Post comment via GitHub API**:
    - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
+   - **Check token availability first**: Only attempt API call if `GITHUB_TOKEN` is set or GitHub CLI is authenticated
    - Use POST: `https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments`
    - Body: `{"body": "## Implementation Breakdown\n\n[formatted breakdown]"}`
-   - Requires authentication token
+   - Headers: `-H "Authorization: token $GITHUB_TOKEN"` (if token available)
+   - **Alternative**: Use GitHub CLI if available: `gh issue comment {issue_number} --body "..."`
 
-3. **Comment format example**:
+4. **Comment format example**:
    ```markdown
    ## Implementation Breakdown
    
@@ -128,9 +147,11 @@ Post the breakdown as a comment on the issue:
    - [ ] Subtask 2.1
    ```
 
-4. **Handle comment failure**:
-   - If API comment fails, display the breakdown to user
-   - User can manually add the comment
+5. **Handle comment failure**:
+   - If token is not available, skip API call and display the breakdown to user
+   - If API comment fails (401 Bad credentials, 403 Forbidden), display the breakdown to user
+   - Provide manual comment instructions: "You can add this comment manually at: https://github.com/{owner}/{repo}/issues/{issue_number}"
+   - User can manually add the comment via GitHub UI
 
 ### Step 5: Create Feature Branch
 
@@ -239,27 +260,36 @@ After pushing the branch, create a PR:
      - Testing notes
      - Screenshots (if UI changes)
 
-2. **Create PR via GitHub API**:
+2. **Check for authentication token**:
+   - Before making API calls, verify token is available (see Step 3.2 above)
+
+3. **Create PR via GitHub API**:
    - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
+   - **Check token availability first**: Only attempt API call if `GITHUB_TOKEN` is set or GitHub CLI is authenticated
    - Use POST: `https://api.github.com/repos/{owner}/{repo}/pulls`
    - Body: `{"title": "...", "body": "...", "head": "...", "base": "main"}`
-   - Requires authentication token
+   - Headers: `-H "Authorization: token $GITHUB_TOKEN"` (if token available)
+   - **Alternative**: Use GitHub CLI if available: `gh pr create --title "..." --body "..." --base main --head {branch-name}`
    
-   Example API call:
+   Example API call (with token check):
    ```bash
-   curl -X POST \
-     -H "Authorization: token YOUR_TOKEN" \
-     -H "Accept: application/vnd.github.v3+json" \
-     "https://api.github.com/repos/{owner}/{repo}/pulls" \
-     -d '{
-       "title": "Add dark mode toggle [MA-1]",
-       "body": "## Summary\n\nImplements dark mode toggle feature...\n\nCloses #42\n\n## Changes\n\n- Add theme state management\n- Create toggle component\n- Apply theme styles\n\n## Testing\n\n- [x] Tested theme switching\n- [x] Verified localStorage persistence",
-       "head": "issue-42-dark-mode-toggle",
-       "base": "main"
-     }'
+   if [ -n "$GITHUB_TOKEN" ]; then
+     curl -X POST \
+       -H "Authorization: token $GITHUB_TOKEN" \
+       -H "Accept: application/vnd.github.v3+json" \
+       "https://api.github.com/repos/{owner}/{repo}/pulls" \
+       -d '{
+         "title": "Add dark mode toggle [MA-1]",
+         "body": "## Summary\n\nImplements dark mode toggle feature...\n\nCloses #42\n\n## Changes\n\n- Add theme state management\n- Create toggle component\n- Apply theme styles\n\n## Testing\n\n- [x] Tested theme switching\n- [x] Verified localStorage persistence",
+         "head": "issue-42-dark-mode-toggle",
+         "base": "main"
+       }'
+   else
+     echo "GITHUB_TOKEN not set, skipping PR creation via API"
+   fi
    ```
 
-3. **PR body template**:
+4. **PR body template**:
    ```markdown
    ## Summary
    [Brief description of what this PR does]
@@ -284,13 +314,15 @@ After pushing the branch, create a PR:
    [Add screenshots for UI changes]
    ```
 
-4. **Link PR to issue**:
+5. **Link PR to issue**:
    - Use keywords in PR description: `Closes #42`, `Fixes #42`, `Resolves #42`
    - GitHub will automatically link and close the issue when PR is merged
 
-5. **Handle PR creation failure**:
-   - If API fails, provide PR URL template:
-     - `https://github.com/{owner}/{repo}/compare/main...issue-42-dark-mode-toggle`
+6. **Handle PR creation failure**:
+   - If token is not available, skip API call and provide PR URL template
+   - If API fails (401 Bad credentials, 403 Forbidden), provide PR URL template
+   - PR URL template: `https://github.com/{owner}/{repo}/compare/main...{branch-name}`
+   - Direct PR creation URL: `https://github.com/{owner}/{repo}/pull/new/{branch-name}`
    - User can create PR manually via GitHub UI
    - Include prepared title and description for easy copy-paste
 
@@ -432,10 +464,51 @@ If Git push fails:
 
 ### Authentication
 
-- GitHub API requires authentication for private repos (use `GITHUB_TOKEN` env var if available)
-- For public repos, API works without auth but has rate limits
-- Web fetch works for public repos but may need parsing
-- Always verify the issue is still open/valid before starting work
+**IMPORTANT**: Authentication is required for write operations (assigning issues, posting comments, creating PRs). Read operations (fetching issues) work without auth for public repos but have rate limits.
+
+1. **Check for token before making authenticated API calls**:
+   ```bash
+   # Check for GITHUB_TOKEN environment variable
+   if [ -n "$GITHUB_TOKEN" ]; then
+     echo "Token available, proceeding with API call"
+   else
+     echo "Token not set, skipping authenticated API call"
+   fi
+   ```
+
+2. **Token sources (in order of preference)**:
+   - `GITHUB_TOKEN` environment variable (most common)
+   - GitHub CLI authentication: `gh auth status` (if GitHub CLI is installed and authenticated)
+   - Git credential helper (for git operations only, not API calls)
+
+3. **Setting up authentication**:
+   - **GitHub Personal Access Token**:
+     - Create at: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+     - Required scopes: `repo`, `issues:write`, `pull_requests:write`
+     - Set environment variable: `export GITHUB_TOKEN=your_token_here`
+   - **GitHub CLI**:
+     - Install: `brew install gh` (macOS) or see https://cli.github.com/
+     - Authenticate: `gh auth login`
+     - CLI will handle authentication automatically
+
+4. **Handling authentication failures**:
+   - **401 Bad credentials**: Token is invalid or expired
+     - Check if `GITHUB_TOKEN` is set correctly
+     - Verify token has required permissions
+     - Try regenerating token
+   - **403 Forbidden**: Token lacks required permissions
+     - Ensure token has `repo`, `issues:write`, `pull_requests:write` scopes
+   - **No token available**: Skip authenticated operations gracefully
+     - Inform user that manual steps are needed
+     - Provide URLs and instructions for manual completion
+
+5. **Best practices**:
+   - Always check for token availability before making authenticated API calls
+   - Never hardcode tokens in code or commit them to version control
+   - Use environment variables or secure credential storage
+   - For public repos, read operations work without auth (with rate limits)
+   - For write operations, authentication is always required
+   - If authentication fails, gracefully fall back to manual instructions
 
 ### Git Operations
 
@@ -452,8 +525,46 @@ If Git push fails:
 
 - Project identifiers (MA-1, PROJ-123, etc.) are searched in issue titles and bodies
 - Assignment, commenting, and PR creation require GitHub API authentication
-- If API operations fail, continue with local workflow and inform user
+- **Always check for token availability before attempting authenticated API calls**
+- If API operations fail due to authentication, continue with local workflow and inform user
+- Provide clear manual instructions when automated operations cannot complete
 - Branch names should be descriptive and reference the issue number
 - Use conventional commit messages for better project history
 - PR descriptions should reference the issue to auto-close on merge
 - Git push authentication issues are common - always retry with proper permissions before giving up
+
+### Authentication Error Handling
+
+When making GitHub API calls that require authentication:
+
+1. **Before the call**: Check if `GITHUB_TOKEN` is set or GitHub CLI is authenticated
+2. **During the call**: Include proper error handling for 401/403 responses
+3. **After failure**: Provide clear instructions for manual completion
+4. **Example pattern**:
+   ```bash
+   # Check token first
+   if [ -z "$GITHUB_TOKEN" ]; then
+     echo "GITHUB_TOKEN not set. Skipping API call."
+     echo "Manual step: Visit https://github.com/{owner}/{repo}/issues/{issue_number}"
+     exit 0
+   fi
+   
+   # Make API call with error handling
+   response=$(curl -s -w "\n%{http_code}" -X POST \
+     -H "Authorization: token $GITHUB_TOKEN" \
+     -H "Accept: application/vnd.github.v3+json" \
+     "https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments" \
+     -d '{"body": "..."}')
+   
+   http_code=$(echo "$response" | tail -n1)
+   if [ "$http_code" = "201" ] || [ "$http_code" = "200" ]; then
+     echo "Success"
+   elif [ "$http_code" = "401" ]; then
+     echo "Authentication failed: Bad credentials"
+     echo "Please check your GITHUB_TOKEN"
+   elif [ "$http_code" = "403" ]; then
+     echo "Permission denied: Token lacks required permissions"
+   else
+     echo "API call failed with status: $http_code"
+   fi
+   ```
