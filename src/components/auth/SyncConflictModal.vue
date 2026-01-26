@@ -6,10 +6,10 @@
   >
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
       <h2 class="text-xl font-semibold text-gray-900 mb-4">
-        {{ $t('localMode.syncConflict.title') }}
+        {{ $t('localMode.syncModal.title') }}
       </h2>
       <p class="text-sm text-gray-600 mb-6">
-        {{ $t('localMode.syncConflict.message') }}
+        {{ $t('localMode.syncModal.message') }}
       </p>
       
       <div class="space-y-3">
@@ -18,10 +18,10 @@
           class="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
         >
           <div class="font-medium text-gray-900 mb-1">
-            {{ $t('localMode.syncConflict.useAccount') }}
+            {{ $t('localMode.syncModal.useAccount') }}
           </div>
           <div class="text-xs text-gray-500">
-            {{ $t('localMode.syncConflict.useAccountDesc') }}
+            {{ $t('localMode.syncModal.useAccountDesc') }}
           </div>
         </button>
         
@@ -30,10 +30,10 @@
           class="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
         >
           <div class="font-medium text-gray-900 mb-1">
-            {{ $t('localMode.syncConflict.useLocal') }}
+            {{ $t('localMode.syncModal.useLocal') }}
           </div>
           <div class="text-xs text-gray-500">
-            {{ $t('localMode.syncConflict.useLocalDesc') }}
+            {{ $t('localMode.syncModal.useLocalDesc') }}
           </div>
         </button>
         
@@ -42,10 +42,10 @@
           class="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
         >
           <div class="font-medium text-gray-900 mb-1">
-            {{ $t('localMode.syncConflict.merge') }}
+            {{ $t('localMode.syncModal.merge') }}
           </div>
           <div class="text-xs text-gray-500">
-            {{ $t('localMode.syncConflict.mergeDesc') }}
+            {{ $t('localMode.syncModal.mergeDesc') }}
           </div>
         </button>
       </div>

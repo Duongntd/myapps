@@ -250,6 +250,16 @@
     "syncing": "Syncing data...",
     "syncSuccess": "Data synced successfully!",
     "syncError": "Failed to sync data. Please try again.",
+    "syncModal": {
+      "title": "Sync Local Data",
+      "message": "You have local data. How would you like to sync it with your account?",
+      "useAccount": "Use account data",
+      "useAccountDesc": "Keep your existing account data and discard local data",
+      "useLocal": "Use local data",
+      "useLocalDesc": "Sync local data to your account (adds to existing data)",
+      "merge": "Merge both",
+      "mergeDesc": "Keep all data from both sources"
+    },
     "syncConflict": {
       "title": "Data Conflict",
       "message": "Your account already has data. How would you like to proceed?",

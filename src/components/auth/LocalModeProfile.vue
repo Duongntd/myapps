@@ -112,21 +112,10 @@ const handleSignIn = async (): Promise<void> => {
     const user = await authStore.login(true)
     pendingUser.value = user.uid
     
-    // Check if account has data
-    const hasData = await checkAccountHasData(user.uid)
-    
-    if (hasData) {
-      // Show conflict resolution modal
-      showSyncModal.value = true
-      syncing.value = false
-    } else {
-      // No conflict, sync local data automatically
-      await syncLocalToFirebase(user.uid, 'useLocal')
-      authStore.completeLocalModeSync()
-      syncing.value = false
-      // Refresh stores to load synced data
-      window.location.reload()
-    }
+    // Always show sync modal when logging in from local mode
+    // User should decide what to do with local data
+    showSyncModal.value = true
+    syncing.value = false
   } catch (error) {
     console.error('Sign in error:', error)
     syncing.value = false
@@ -141,9 +130,37 @@ const handleSyncStrategy = async (strategy: SyncStrategy): Promise<void> => {
     syncing.value = true
     showSyncModal.value = false
     
+    // If user chooses to use account data, clear local storage
+    if (strategy === 'useAccount') {
+      // Clear all local storage data
+      const STORAGE_KEYS = [
+        'readTracker_books',
+        'readTracker_sessions',
+        'readTracker_goals',
+        'readTracker_localModeWarningDismissed'
+      ]
+      STORAGE_KEYS.forEach(key => localStorage.removeItem(key))
+      // Complete sync (disables local mode)
+      authStore.completeLocalModeSync()
+      syncing.value = false
+      // Refresh stores to load account data
+      window.location.reload()
+      return
+    }
+    
+    // For 'useLocal' or 'merge', sync the data
     const result = await syncLocalToFirebase(pendingUser.value, strategy)
     
     if (result.success) {
+      // Clear local storage data after successful sync
+      const STORAGE_KEYS = [
+        'readTracker_books',
+        'readTracker_sessions',
+        'readTracker_goals',
+        'readTracker_localModeWarningDismissed'
+      ]
+      STORAGE_KEYS.forEach(key => localStorage.removeItem(key))
+      // Complete sync (disables local mode)
       authStore.completeLocalModeSync()
       syncing.value = false
       // Refresh stores to load synced data
