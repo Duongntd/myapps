@@ -7,18 +7,7 @@
 
     <!-- Authentication Options -->
     <div v-if="!authStore.isAuthenticated && !authStore.loading" class="mb-8 sm:mb-12">
-      <div class="max-w-2xl mx-auto space-y-4">
-        <!-- Sign In Option -->
-        <div class="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
-          <div class="flex items-center justify-between">
-            <div class="flex-1">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{{ $t('common.signInWithGoogle') }}</h3>
-              <p class="text-sm sm:text-base text-gray-600 mb-4">{{ $t('home.signIn.description') }}</p>
-            </div>
-            <GoogleLoginButton />
-          </div>
-        </div>
-        
+      <div class="max-w-2xl mx-auto">
         <!-- Local Mode Option -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
           <div class="flex items-start gap-3 sm:gap-4">
@@ -73,7 +62,6 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
-import GoogleLoginButton from '@/components/auth/GoogleLoginButton.vue'
 
 interface App {
   id: string
