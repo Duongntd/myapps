@@ -45,13 +45,21 @@ jobs:
         run: npm run build
 
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
-          channelId: live
-          target: hosting
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          # Write service account JSON to file
+          echo "$FIREBASE_SERVICE_ACCOUNT" > $HOME/firebase-service-account.json
+          
+          # Set environment variable for Firebase CLI authentication
+          export GOOGLE_APPLICATION_CREDENTIALS="$HOME/firebase-service-account.json"
+          
+          # Deploy to hosting (without target, just hosting)
+          npx firebase-tools deploy --only hosting --project "$FIREBASE_PROJECT_ID" --non-interactive
+          
+          # Clean up sensitive file
+          rm -f $HOME/firebase-service-account.json
 
       - name: Deployment summary
         run: |
