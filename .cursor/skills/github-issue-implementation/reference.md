@@ -357,11 +357,11 @@ Some projects include repository info:
 
 ### GitHub Token Setup
 
-For assignment and commenting, you need a GitHub Personal Access Token:
+For assignment, commenting, and PR creation, you need a GitHub Personal Access Token:
 
 1. **Create token**:
    - GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-   - Generate new token with scopes: `repo`, `issues:write`
+   - Generate new token with scopes: `repo`, `issues:write`, `pull_requests:write`
 
 2. **Use token**:
    - Set environment variable: `export GITHUB_TOKEN=your_token`
@@ -372,6 +372,19 @@ For assignment and commenting, you need a GitHub Personal Access Token:
    - `public_repo` - Public repository access (for public repos)
    - `issues:write` - Write access to issues (for assignment and comments)
    - `pull_requests:write` - Write access to pull requests (for creating PRs)
+
+### Network Permissions
+
+**For seamless GitHub API access without approval prompts**:
+
+When using this skill, the agent will request network permissions using `required_permissions: ['network']` in tool calls. This allows:
+- Fetching issues from GitHub API
+- Searching for project identifiers
+- Assigning issues
+- Posting comments
+- Creating pull requests
+
+**Note**: The agent will request network permissions automatically when making GitHub API calls. If you want to pre-approve network access, you can configure Cursor settings, but the skill handles this automatically by requesting permissions in each API call.
 
 ## Git Workflow Best Practices
 
