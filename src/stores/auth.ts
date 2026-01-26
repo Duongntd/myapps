@@ -14,20 +14,31 @@ export const useAuthStore = defineStore('auth', () => {
   // Check for local mode preference on initialization
   const initializeLocalMode = () => {
     const stored = localStorage.getItem(LOCAL_MODE_KEY)
-    localMode.value = stored === 'true'
-    if (localMode.value) {
+    if (stored === 'true') {
+      localMode.value = true
       loading.value = false
     }
+    // Don't auto-enable here - wait for auth check
   }
 
   // Initialize auth state listener
   onAuthChange((firebaseUser: User | null) => {
     user.value = firebaseUser
     loading.value = false
-    // If user logs in, disable local mode (unless we're syncing from local)
-    if (firebaseUser && !syncingFromLocal.value) {
-      localMode.value = false
-      localStorage.removeItem(LOCAL_MODE_KEY)
+    
+    if (firebaseUser) {
+      // User is authenticated - disable local mode (unless we're syncing from local)
+      if (!syncingFromLocal.value) {
+        localMode.value = false
+        localStorage.removeItem(LOCAL_MODE_KEY)
+      }
+    } else {
+      // User is not authenticated - auto-enable local mode if not already set
+      const stored = localStorage.getItem(LOCAL_MODE_KEY)
+      if (stored !== 'true') {
+        localMode.value = true
+        localStorage.setItem(LOCAL_MODE_KEY, 'true')
+      }
     }
   })
 
@@ -37,8 +48,10 @@ export const useAuthStore = defineStore('auth', () => {
   // Add timeout to ensure loading state doesn't block UI indefinitely
   // If Firebase auth doesn't respond within 3 seconds, assume not authenticated
   setTimeout(() => {
-    if (loading.value && !localMode.value) {
-      console.warn('Firebase auth initialization timeout - showing sign-in option')
+    if (loading.value && !localMode.value && !user.value) {
+      console.warn('Firebase auth initialization timeout - auto-enabling local mode')
+      localMode.value = true
+      localStorage.setItem(LOCAL_MODE_KEY, 'true')
       loading.value = false
     }
   }, 3000)
@@ -98,16 +111,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const clearLocalData = (): void => {
-    // Clear all local storage data
+    // Clear only data, keep localMode enabled
     const STORAGE_KEYS = [
-      'readTracker_localMode',
       'readTracker_books',
       'readTracker_sessions',
       'readTracker_goals',
       'readTracker_localModeWarningDismissed'
     ]
     STORAGE_KEYS.forEach(key => localStorage.removeItem(key))
-    disableLocalMode()
+    // Don't disable local mode - keep it enabled
     // Reload the page to reset app state
     window.location.reload()
   }

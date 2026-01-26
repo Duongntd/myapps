@@ -5,34 +5,8 @@
       <p class="text-base sm:text-xl text-gray-600">{{ $t('app.subtitle') }}</p>
     </div>
 
-    <!-- Authentication Options -->
-    <div v-if="!authStore.isAuthenticated && !authStore.loading" class="mb-8 sm:mb-12">
-      <div class="max-w-2xl mx-auto">
-        <!-- Local Mode Option -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
-          <div class="flex items-start gap-3 sm:gap-4">
-            <div class="flex-shrink-0">
-              <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="flex-1">
-              <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{{ $t('home.localMode.title') }}</h3>
-              <p class="text-sm sm:text-base text-gray-700 mb-4">{{ $t('home.localMode.description') }}</p>
-              <button
-                @click="enableLocalMode"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm sm:text-base"
-              >
-                {{ $t('home.localMode.startButton') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
     <!-- Loading State -->
-    <div v-else-if="authStore.loading" class="mb-8 sm:mb-12">
+    <div v-if="authStore.loading" class="mb-8 sm:mb-12">
       <div class="max-w-2xl mx-auto text-center">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
         <p class="text-sm text-gray-600">{{ $t('common.loading') }}</p>
@@ -89,10 +63,5 @@ const apps = ref<App[]>([
 
 const navigateToApp = (route: string): void => {
   router.push(route)
-}
-
-const enableLocalMode = (): void => {
-  authStore.enableLocalMode()
-  router.push('/read-tracker')
 }
 </script>
