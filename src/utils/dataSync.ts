@@ -5,10 +5,13 @@ import { getGoals as getGoalsLocal } from '@/storage/localStorage'
 import {
   getBooks as getBooksFirebase,
   addBook as addBookFirebase,
+  deleteBook as deleteBookFirebase,
   getReadingSessions as getReadingSessionsFirebase,
   addReadingSession as addReadingSessionFirebase,
+  deleteReadingSession as deleteReadingSessionFirebase,
   getGoals as getGoalsFirebase,
   addGoal as addGoalFirebase,
+  deleteGoal as deleteGoalFirebase,
   type Book,
   type ReadingSession,
   type Goal
@@ -99,17 +102,29 @@ export const syncLocalToFirebase = async (
     }
 
     if (strategy === 'useLocal') {
-      // Replace account data with local data
-      // First, get existing account data to know what to replace
+      // Replace account data with local data - DELETE all existing account data first
       const accountBooks = await getBooksFirebase(userId)
       const accountSessions = await getReadingSessionsFirebase(userId)
       const accountGoals = await getGoalsFirebase(userId)
 
-      // For simplicity, we'll just add local data
-      // In a production app, you might want to delete existing data first
-      // But for now, we'll just add and let duplicates exist (they'll have different IDs)
+      // Delete all existing account data
+      for (const book of accountBooks) {
+        if (book.id) {
+          await deleteBookFirebase(userId, book.id)
+        }
+      }
+      for (const session of accountSessions) {
+        if (session.id) {
+          await deleteReadingSessionFirebase(userId, session.id)
+        }
+      }
+      for (const goal of accountGoals) {
+        if (goal.id) {
+          await deleteGoalFirebase(userId, goal.id)
+        }
+      }
       
-      // Sync books
+      // Now add all local data (replacing the account data)
       for (const book of localBooks) {
         const { id, ...bookData } = book
         const convertedBook = convertTimestamps(bookData, ['startDate', 'completedDate', 'createdAt'])
@@ -117,7 +132,6 @@ export const syncLocalToFirebase = async (
         booksSynced++
       }
 
-      // Sync sessions
       for (const session of localSessions) {
         const { id, ...sessionData } = session
         const convertedSession = convertTimestamps(sessionData, ['date', 'startTime', 'endTime', 'createdAt'])
@@ -125,7 +139,6 @@ export const syncLocalToFirebase = async (
         sessionsSynced++
       }
 
-      // Sync goals
       for (const goal of localGoals) {
         const { id, ...goalData } = goal
         await addGoalFirebase(userId, goalData)
