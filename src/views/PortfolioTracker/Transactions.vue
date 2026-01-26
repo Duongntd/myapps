@@ -58,6 +58,7 @@
               type="text"
               required
               placeholder="AAPL"
+              @blur="updatePriceFromSymbol"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               :class="{ 'border-red-500': errors.symbol }"
             />
@@ -245,8 +246,28 @@ const errors = ref({
 })
 
 onMounted(async () => {
+  await portfolioStore.fetchHoldings()
   await portfolioStore.fetchTransactions()
+  // Load prices for existing holdings
+  const symbols = portfolioStore.holdings.map(h => h.symbol)
+  if (symbols.length > 0) {
+    const { getMultipleStockPrices } = await import('@/utils/stockPrice')
+    const prices = await getMultipleStockPrices(symbols)
+    prices.forEach((price, symbol) => {
+      portfolioStore.updateStockPrice(symbol, price)
+    })
+  }
 })
+
+const updatePriceFromSymbol = () => {
+  if (form.value.symbol) {
+    const symbol = form.value.symbol.toUpperCase()
+    const currentPrice = portfolioStore.getStockPrice(symbol)
+    if (currentPrice !== null && currentPrice > 0) {
+      form.value.price = currentPrice
+    }
+  }
+}
 
 const closeForm = () => {
   showForm.value = false

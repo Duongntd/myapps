@@ -41,6 +41,8 @@
     "totalValue": "Total Value",
     "totalCost": "Total Cost",
     "totalNAV": "Total NAV",
+    "performance": "Performance",
+    "performanceDesc": "Portfolio return",
     "totalInvested": "Total Invested",
     "totalCash": "Total Cash",
     "totalStockValue": "Total Stock Value",
