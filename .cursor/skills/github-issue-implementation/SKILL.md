@@ -207,7 +207,22 @@ After completing implementation:
    git push -u origin issue-42-dark-mode-toggle
    ```
    - Use `-u` to set upstream tracking
+   - **Request required permissions**: Use `required_permissions: ['network', 'git_write']` for push operations
    - Handle push failures (e.g., authentication, permissions)
+
+5. **Handle Git authentication issues**:
+   - If push fails with "could not read Username" or authentication errors:
+     - **First attempt**: Ensure `required_permissions: ['network', 'git_write']` are set in the tool call
+     - The push may succeed with proper permissions even if initial attempt failed
+     - Check if user has credentials cached (macOS Keychain, Git Credential Manager, etc.)
+   - If HTTPS authentication fails persistently:
+     - Check remote URL: `git remote -v`
+     - User may need to configure Git credentials or use SSH
+     - Provide manual push instructions if automated push fails
+   - If push succeeds, continue to PR creation step
+   - If push fails after retry with permissions, inform user and provide:
+     - Manual push command: `git push -u origin <branch-name>`
+     - PR creation URL: `https://github.com/{owner}/{repo}/pull/new/{branch-name}`
 
 ### Step 9: Create Pull Request
 
@@ -385,6 +400,22 @@ If breakdown is unclear:
 - Make reasonable assumptions and note them
 - Proceed with best-effort breakdown
 
+If Git push fails:
+- **Authentication errors** ("could not read Username", "Device not configured"):
+  - Ensure `required_permissions: ['network', 'git_write']` are set
+  - Retry the push command with proper permissions
+  - If still failing, check Git credential configuration
+  - Provide manual push instructions: `git push -u origin <branch-name>`
+  - Provide PR creation URL for manual PR creation
+- **Permission errors**:
+  - Verify user has write access to the repository
+  - Check if branch protection rules require PR creation
+  - Inform user if manual intervention is needed
+- **Network errors**:
+  - Check internet connectivity
+  - Verify GitHub is accessible
+  - Retry after a brief delay
+
 ## Notes
 
 ### Network Permissions
@@ -406,6 +437,17 @@ If breakdown is unclear:
 - Web fetch works for public repos but may need parsing
 - Always verify the issue is still open/valid before starting work
 
+### Git Operations
+
+**IMPORTANT**: Git operations (push, commit) require proper permissions:
+- Always use `required_permissions: ['git_write']` for git write operations
+- Use `required_permissions: ['network', 'git_write']` for push operations
+- If push fails with authentication errors:
+  1. Retry with proper permissions set
+  2. Check if credentials are cached (may work on retry)
+  3. If still failing, provide manual instructions to user
+- Git push may succeed even if initial error message suggests failure - always verify with `git status` or by checking remote
+
 ### Other Notes
 
 - Project identifiers (MA-1, PROJ-123, etc.) are searched in issue titles and bodies
@@ -414,3 +456,4 @@ If breakdown is unclear:
 - Branch names should be descriptive and reference the issue number
 - Use conventional commit messages for better project history
 - PR descriptions should reference the issue to auto-close on merge
+- Git push authentication issues are common - always retry with proper permissions before giving up

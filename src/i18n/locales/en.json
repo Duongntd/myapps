@@ -213,7 +213,9 @@
     "signedInAs": "Signed in as",
     "about": "About",
     "aboutDesc": "Read Tracker - Track your reading time and build better reading habits.",
-    "version": "Version 1.0.0"
+    "version": "Version",
+    "releaseDate": "Release Date",
+    "releaseNotes": "Release Notes"
   },
   "language": {
     "selectLanguage": "Select Language",

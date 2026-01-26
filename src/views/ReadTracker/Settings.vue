@@ -32,16 +32,32 @@
       <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $t('settings.about') }}</h3>
       <div class="space-y-3 text-sm text-gray-600">
         <p><strong>{{ $t('readTracker.title') }}</strong> - {{ $t('settings.aboutDesc') }}</p>
-        <p>{{ $t('settings.version') }}</p>
+        <p>{{ $t('settings.version') }}: <span class="font-mono font-medium">{{ versionString }}</span></p>
+        <p v-if="showReleaseInfo" class="text-xs text-gray-500">{{ $t('settings.releaseDate') }}: {{ releaseDate }}</p>
+        
+        <!-- Release Notes -->
+        <div v-if="hasReleaseNotes" class="mt-4 pt-4 border-t border-gray-200">
+          <h4 class="text-sm font-semibold text-gray-900 mb-2">{{ $t('settings.releaseNotes') }}</h4>
+          <div class="text-xs text-gray-600 whitespace-pre-line">{{ formattedReleaseNotes }}</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { getVersionString, getVersionInfo, getFormattedReleaseNotes } from '@/utils/version'
 
-const { t } = useI18n()
+useI18n() // Required for $t() in template
 const authStore = useAuthStore()
+
+const versionString = computed(() => getVersionString())
+const versionInfo = computed(() => getVersionInfo())
+const releaseDate = computed(() => versionInfo.value.releaseDate)
+const showReleaseInfo = computed(() => import.meta.env.PROD)
+const formattedReleaseNotes = computed(() => getFormattedReleaseNotes())
+const hasReleaseNotes = computed(() => !!versionInfo.value.releaseNotes)
 </script>

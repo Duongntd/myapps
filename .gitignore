@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+*.secrets.*
 
 # Editor directories and files
 .vscode/*
