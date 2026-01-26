@@ -1,0 +1,275 @@
+<template>
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="$emit('close')">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <h3 class="text-xl font-semibold text-gray-900">
+          {{ editingGoal ? 'Edit Goal' : 'Create New Goal' }}
+        </h3>
+        <button
+          @click="$emit('close')"
+          class="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="p-6 space-y-6">
+        <!-- Goal Type -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Goal Type <span class="text-red-500">*</span>
+          </label>
+          <select
+            v-model="formData.type"
+            required
+            @change="updatePeriodFields"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+
+        <!-- Target Minutes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Target Reading Time <span class="text-red-500">*</span>
+          </label>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Hours</label>
+              <input
+                v-model.number="formData.hours"
+                type="number"
+                min="0"
+                max="24"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Minutes</label>
+              <input
+                v-model.number="formData.minutes"
+                type="number"
+                min="0"
+                max="59"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <p v-if="totalMinutes > 0" class="mt-2 text-sm text-gray-600">
+            Total: {{ formatDuration(totalMinutes) }} per {{ formData.type === 'daily' ? 'day' : formData.type === 'weekly' ? 'week' : formData.type === 'monthly' ? 'month' : 'year' }}
+          </p>
+          <p v-if="errors.targetMinutes" class="mt-1 text-sm text-red-600">{{ errors.targetMinutes }}</p>
+        </div>
+
+        <!-- Period Selection (for weekly/monthly/yearly) -->
+        <div v-if="formData.type !== 'daily'">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            {{ formData.type === 'weekly' ? 'Week' : formData.type === 'monthly' ? 'Month' : 'Year' }}
+          </label>
+          <div class="grid grid-cols-2 gap-4">
+            <div v-if="formData.type === 'weekly' || formData.type === 'monthly' || formData.type === 'yearly'">
+              <label class="block text-xs text-gray-500 mb-1">Year</label>
+              <select
+                v-model.number="formData.year"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+              </select>
+            </div>
+            <div v-if="formData.type === 'weekly'">
+              <label class="block text-xs text-gray-500 mb-1">Week</label>
+              <input
+                v-model.number="formData.week"
+                type="number"
+                min="1"
+                max="53"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Week number"
+              />
+            </div>
+            <div v-if="formData.type === 'monthly'">
+              <label class="block text-xs text-gray-500 mb-1">Month</label>
+              <select
+                v-model.number="formData.month"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option v-for="month in 12" :key="month" :value="month">{{ getMonthName(month) }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div v-if="submitError" class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p class="text-sm text-red-600">{{ submitError }}</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 justify-end pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            @click="$emit('close')"
+            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ loading ? 'Saving...' : (editingGoal ? 'Update Goal' : 'Create Goal') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useGoalsStore } from '@/stores/goals'
+import type { Goal } from '@/firebase/firestore'
+import { getWeek, getYear } from 'date-fns'
+
+interface Props {
+  goal?: Goal | null
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  goal: null
+})
+
+const emit = defineEmits<{
+  close: []
+  save: []
+}>()
+
+const goalsStore = useGoalsStore()
+
+const loading = ref(false)
+const submitError = ref('')
+const errors = ref<Record<string, string>>({})
+
+const editingGoal = computed(() => props.goal)
+
+// Form data
+const formData = ref({
+  type: 'daily' as 'daily' | 'weekly' | 'monthly' | 'yearly',
+  hours: 0,
+  minutes: 0,
+  year: new Date().getFullYear(),
+  month: new Date().getMonth() + 1,
+  week: getWeek(new Date())
+})
+
+// Calculate total minutes
+const totalMinutes = computed(() => {
+  return (formData.value.hours || 0) * 60 + (formData.value.minutes || 0)
+})
+
+// Available years (current year and next year)
+const availableYears = computed(() => {
+  const currentYear = new Date().getFullYear()
+  return [currentYear, currentYear + 1]
+})
+
+// Initialize form with goal data if editing
+onMounted(() => {
+  if (editingGoal.value) {
+    const goal = editingGoal.value
+    formData.value.type = goal.type
+    formData.value.hours = Math.floor(goal.targetMinutes / 60)
+    formData.value.minutes = goal.targetMinutes % 60
+    formData.value.year = goal.year || new Date().getFullYear()
+    formData.value.month = goal.month || new Date().getMonth() + 1
+    formData.value.week = goal.week || getWeek(new Date())
+  } else {
+    // Set defaults for new goal
+    const now = new Date()
+    formData.value.year = getYear(now)
+    formData.value.month = now.getMonth() + 1
+    formData.value.week = getWeek(now)
+  }
+})
+
+const updatePeriodFields = () => {
+  // Reset period fields when type changes
+  const now = new Date()
+  formData.value.year = getYear(now)
+  formData.value.month = now.getMonth() + 1
+  formData.value.week = getWeek(now)
+}
+
+const getMonthName = (month: number): string => {
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ]
+  return months[month - 1]
+}
+
+const validateForm = (): boolean => {
+  errors.value = {}
+
+  if (totalMinutes.value <= 0) {
+    errors.value.targetMinutes = 'Target reading time must be greater than 0'
+  }
+
+  return Object.keys(errors.value).length === 0
+}
+
+const handleSubmit = async () => {
+  if (!validateForm()) {
+    return
+  }
+
+  loading.value = true
+  submitError.value = ''
+
+  try {
+    const goalData: Omit<Goal, 'id'> = {
+      type: formData.value.type,
+      targetMinutes: totalMinutes.value,
+      ...(formData.value.type !== 'daily' && { year: formData.value.year }),
+      ...(formData.value.type === 'weekly' && { week: formData.value.week }),
+      ...(formData.value.type === 'monthly' && { month: formData.value.month })
+    }
+
+    if (editingGoal.value?.id) {
+      await goalsStore.updateGoalData(editingGoal.value.id, goalData)
+    } else {
+      await goalsStore.createGoal(goalData)
+    }
+
+    emit('save')
+  } catch (error) {
+    console.error('Error saving goal:', error)
+    submitError.value = 'Failed to save goal. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const formatDuration = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes} minutes`
+  }
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return mins > 0 ? `${hours} hour${hours > 1 ? 's' : ''} ${mins} minute${mins !== 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''}`
+}
+</script>

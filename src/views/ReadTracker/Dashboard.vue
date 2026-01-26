@@ -96,6 +96,38 @@
       </div>
     </div>
 
+    <!-- Goals Section -->
+    <div v-if="activeGoals.length > 0" class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Active Goals</h3>
+      <div class="space-y-4">
+        <div
+          v-for="goal in activeGoals"
+          :key="goal.id"
+          class="p-4 bg-gray-50 rounded-lg"
+        >
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-medium text-gray-900">{{ formatGoalType(goal.type) }} Goal</span>
+            <span class="text-sm font-semibold text-gray-700">
+              {{ formatDuration(goalProgress(goal).current) }} / {{ formatDuration(goal.targetMinutes) }}
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+            <div
+              :class="[
+                'h-2 rounded-full transition-all',
+                goalProgress(goal).percentage >= 100 ? 'bg-green-500' : 'bg-primary-600'
+              ]"
+              :style="{ width: `${Math.min(goalProgress(goal).percentage, 100)}%` }"
+            ></div>
+          </div>
+          <p class="text-xs text-gray-500">
+            {{ Math.round(goalProgress(goal).percentage) }}% complete
+            <span v-if="goalProgress(goal).percentage >= 100"> 🎉</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Charts Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Weekly Reading Chart -->
@@ -140,24 +172,28 @@
 import { ref, computed, onMounted } from 'vue'
 import { useReadingSessionsStore } from '@/stores/readingSessions'
 import { useBooksStore } from '@/stores/books'
+import { useGoalsStore } from '@/stores/goals'
 import ReadingChart from '@/components/ReadTracker/ReadingChart.vue'
 import DailyBreakdownChart from '@/components/ReadTracker/DailyBreakdownChart.vue'
-import { 
-  isToday, 
-  isThisWeek, 
-  isThisMonth, 
+import {
+  isToday,
+  isThisWeek,
+  isThisMonth,
   isThisYear,
   startOfWeek,
   startOfMonth,
   startOfYear,
   eachDayOfInterval,
   isSameDay,
-  format as formatDate
+  format as formatDate,
+  getWeek,
+  getYear
 } from 'date-fns'
-import type { ReadingSession } from '@/firebase/firestore'
+import type { ReadingSession, Goal } from '@/firebase/firestore'
 
 const sessionsStore = useReadingSessionsStore()
 const booksStore = useBooksStore()
+const goalsStore = useGoalsStore()
 
 const chartPeriod = ref<'week' | 'month' | 'year'>('week')
 
@@ -165,6 +201,7 @@ const chartPeriod = ref<'week' | 'month' | 'year'>('week')
 onMounted(async () => {
   await sessionsStore.fetchSessions()
   await booksStore.fetchBooks()
+  await goalsStore.fetchGoals()
 })
 
 // Calculate today's total
@@ -330,5 +367,68 @@ const formatDuration = (minutes: number): string => {
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+}
+
+// Get active goals
+const activeGoals = computed(() => {
+  const now = new Date()
+  const currentYear = getYear(now)
+  const currentMonth = now.getMonth() + 1
+  const currentWeek = getWeek(now)
+
+  return goalsStore.goals.filter(goal => {
+    if (goal.type === 'daily') {
+      return true
+    } else if (goal.type === 'weekly') {
+      return goal.year === currentYear && goal.week === currentWeek
+    } else if (goal.type === 'monthly') {
+      return goal.year === currentYear && goal.month === currentMonth
+    } else if (goal.type === 'yearly') {
+      return goal.year === currentYear
+    }
+    return false
+  })
+})
+
+// Calculate goal progress
+const goalProgress = (goal: Goal) => {
+  let currentMinutes = 0
+  const now = new Date()
+
+  if (goal.type === 'daily') {
+    currentMinutes = sessionsStore.sessions
+      .filter(session => session.date && isToday(session.date.toDate()))
+      .reduce((total, session) => total + (session.duration || 0), 0)
+  } else if (goal.type === 'weekly') {
+    currentMinutes = sessionsStore.sessions
+      .filter(session => session.date && isThisWeek(session.date.toDate()))
+      .reduce((total, session) => total + (session.duration || 0), 0)
+  } else if (goal.type === 'monthly') {
+    currentMinutes = sessionsStore.sessions
+      .filter(session => session.date && isThisMonth(session.date.toDate()))
+      .reduce((total, session) => total + (session.duration || 0), 0)
+  } else if (goal.type === 'yearly') {
+    currentMinutes = sessionsStore.sessions
+      .filter(session => session.date && isThisYear(session.date.toDate()))
+      .reduce((total, session) => total + (session.duration || 0), 0)
+  }
+
+  const percentage = (currentMinutes / goal.targetMinutes) * 100
+
+  return {
+    current: currentMinutes,
+    target: goal.targetMinutes,
+    percentage
+  }
+}
+
+const formatGoalType = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    daily: 'Daily',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    yearly: 'Yearly'
+  }
+  return typeMap[type] || type
 }
 </script>
