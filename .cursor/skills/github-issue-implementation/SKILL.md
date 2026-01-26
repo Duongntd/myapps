@@ -21,6 +21,11 @@ This skill automates the workflow of:
 
 ## Workflow
 
+**IMPORTANT**: This workflow requires network access for GitHub API calls. When executing this skill:
+- Request network permissions upfront: Use `required_permissions: ['network']` in all tool calls that access GitHub
+- This ensures smooth execution without repeated approval prompts
+- Network access is needed for fetching issues, searching, assigning, commenting, and creating PRs
+
 ### Step 1: Fetch the GitHub Issue
 
 When the user provides an issue identifier (e.g., "#42", "42", or "MA-1"):
@@ -31,6 +36,7 @@ When the user provides an issue identifier (e.g., "#42", "42", or "MA-1"):
 
 2. **Resolve project identifier** (if provided):
    - If identifier matches pattern like "MA-1", "PROJ-123", etc.:
+     - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
      - Search issues using GitHub API: `GET /repos/{owner}/{repo}/issues?state=all&per_page=100`
      - Look for issue title or body containing the project identifier
      - Alternatively, check GitHub Projects API if identifier is a project item
@@ -38,6 +44,7 @@ When the user provides an issue identifier (e.g., "#42", "42", or "MA-1"):
    - If no project identifier pattern, treat as direct issue number
 
 3. **Fetch the issue**:
+   - **Request network permissions** when making API calls (use `required_permissions: ['network']` in tool calls)
    - Use GitHub API: `https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}`
    - If API fails or no token available, use `mcp_web_fetch` with: `https://github.com/{owner}/{repo}/issues/{issue_number}`
    - Extract: title, body, labels, assignees, comments, issue number (if available)
@@ -80,6 +87,7 @@ After breaking down the issue, assign it:
    - If user wants agent to "assign to itself", this typically means assigning to the user (agents can't be assigned)
 
 2. **Assign via GitHub API**:
+   - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
    - Use PATCH: `https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}`
    - Body: `{"assignees": ["username"]}`
    - Requires authentication token
@@ -98,6 +106,7 @@ Post the breakdown as a comment on the issue:
    - Use checkboxes for tracking: `- [ ] Task description`
 
 2. **Post comment via GitHub API**:
+   - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
    - Use POST: `https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments`
    - Body: `{"body": "## Implementation Breakdown\n\n[formatted breakdown]"}`
    - Requires authentication token
@@ -216,6 +225,12 @@ After pushing the branch, create a PR:
      - Screenshots (if UI changes)
 
 2. **Create PR via GitHub API**:
+   - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
+   - Use POST: `https://api.github.com/repos/{owner}/{repo}/pulls`
+   - Body: `{"title": "...", "body": "...", "head": "...", "base": "main"}`
+   - Requires authentication token
+   
+   Example API call:
    ```bash
    curl -X POST \
      -H "Authorization: token YOUR_TOKEN" \
@@ -372,10 +387,27 @@ If breakdown is unclear:
 
 ## Notes
 
+### Network Permissions
+
+**IMPORTANT**: All GitHub API calls require network permissions. When making API calls:
+- Always use `required_permissions: ['network']` in tool calls that fetch from GitHub
+- This allows the agent to make network requests without asking for approval each time
+- Network permissions are needed for:
+  - Fetching issues
+  - Searching for project identifiers
+  - Assigning issues
+  - Posting comments
+  - Creating pull requests
+
+### Authentication
+
 - GitHub API requires authentication for private repos (use `GITHUB_TOKEN` env var if available)
 - For public repos, API works without auth but has rate limits
 - Web fetch works for public repos but may need parsing
 - Always verify the issue is still open/valid before starting work
+
+### Other Notes
+
 - Project identifiers (MA-1, PROJ-123, etc.) are searched in issue titles and bodies
 - Assignment, commenting, and PR creation require GitHub API authentication
 - If API operations fail, continue with local workflow and inform user
