@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, type Ref } from 'vue'
-import { getReadingSessions, addReadingSession, updateReadingSession, deleteReadingSession, type ReadingSession } from '@/firebase/firestore'
+import { getReadingSessions as getReadingSessionsFirebase, addReadingSession as addReadingSessionFirebase, updateReadingSession as updateReadingSessionFirebase, deleteReadingSession as deleteReadingSessionFirebase, type ReadingSession } from '@/firebase/firestore'
+import { getReadingSessions as getReadingSessionsLocal, addReadingSession as addReadingSessionLocal, updateReadingSession as updateReadingSessionLocal, deleteReadingSession as deleteReadingSessionLocal } from '@/storage/localStorage'
 import { useAuthStore } from './auth'
 import type { DocumentReference, DocumentData } from 'firebase/firestore'
 
@@ -11,12 +12,16 @@ export const useReadingSessionsStore = defineStore('readingSessions', () => {
 
   const fetchSessions = async (): Promise<void> => {
     const authStore = useAuthStore()
-    if (!authStore.user) return
+    if (!authStore.isAuthenticated) return
 
     loading.value = true
     error.value = null
     try {
-      sessions.value = await getReadingSessions(authStore.user.uid)
+      if (authStore.localMode) {
+        sessions.value = await getReadingSessionsLocal()
+      } else if (authStore.user) {
+        sessions.value = await getReadingSessionsFirebase(authStore.user.uid)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load reading sessions'
       error.value = errorMessage
@@ -26,13 +31,20 @@ export const useReadingSessionsStore = defineStore('readingSessions', () => {
     }
   }
 
-  const createSession = async (sessionData: Omit<ReadingSession, 'id' | 'createdAt'>): Promise<DocumentReference<DocumentData>> => {
+  const createSession = async (sessionData: Omit<ReadingSession, 'id' | 'createdAt'>): Promise<DocumentReference<DocumentData> | { id: string }> => {
     const authStore = useAuthStore()
-    if (!authStore.user) throw new Error('User not authenticated')
+    if (!authStore.isAuthenticated) throw new Error('User not authenticated')
 
     error.value = null
     try {
-      const docRef = await addReadingSession(authStore.user.uid, sessionData)
+      let docRef: DocumentReference<DocumentData> | { id: string }
+      if (authStore.localMode) {
+        docRef = await addReadingSessionLocal(sessionData)
+      } else if (authStore.user) {
+        docRef = await addReadingSessionFirebase(authStore.user.uid, sessionData)
+      } else {
+        throw new Error('User not authenticated')
+      }
       await fetchSessions() // Refresh list
       return docRef
     } catch (err) {
@@ -45,11 +57,17 @@ export const useReadingSessionsStore = defineStore('readingSessions', () => {
 
   const updateSession = async (sessionId: string, updates: Partial<ReadingSession>): Promise<void> => {
     const authStore = useAuthStore()
-    if (!authStore.user) throw new Error('User not authenticated')
+    if (!authStore.isAuthenticated) throw new Error('User not authenticated')
 
     error.value = null
     try {
-      await updateReadingSession(authStore.user.uid, sessionId, updates)
+      if (authStore.localMode) {
+        await updateReadingSessionLocal(sessionId, updates)
+      } else if (authStore.user) {
+        await updateReadingSessionFirebase(authStore.user.uid, sessionId, updates)
+      } else {
+        throw new Error('User not authenticated')
+      }
       await fetchSessions() // Refresh list
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update reading session'
@@ -61,11 +79,17 @@ export const useReadingSessionsStore = defineStore('readingSessions', () => {
 
   const removeSession = async (sessionId: string): Promise<void> => {
     const authStore = useAuthStore()
-    if (!authStore.user) throw new Error('User not authenticated')
+    if (!authStore.isAuthenticated) throw new Error('User not authenticated')
 
     error.value = null
     try {
-      await deleteReadingSession(authStore.user.uid, sessionId)
+      if (authStore.localMode) {
+        await deleteReadingSessionLocal(sessionId)
+      } else if (authStore.user) {
+        await deleteReadingSessionFirebase(authStore.user.uid, sessionId)
+      } else {
+        throw new Error('User not authenticated')
+      }
       await fetchSessions() // Refresh list
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete reading session'
