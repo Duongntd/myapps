@@ -2,14 +2,15 @@
 // Mimics Firestore API structure for easy switching between Firebase and localStorage
 
 import type { Timestamp } from 'firebase/firestore'
-import type { Book, ReadingSession, Goal, StockHolding, Transaction } from '@/firebase/firestore'
+import type { Book, ReadingSession, Goal, StockHolding, Transaction, PortfolioAccount } from '@/firebase/firestore'
 
 const STORAGE_KEYS = {
   BOOKS: 'readTracker_books',
   SESSIONS: 'readTracker_sessions',
   GOALS: 'readTracker_goals',
   STOCK_HOLDINGS: 'portfolioTracker_holdings',
-  TRANSACTIONS: 'portfolioTracker_transactions'
+  TRANSACTIONS: 'portfolioTracker_transactions',
+  PORTFOLIO_ACCOUNT: 'portfolioTracker_account'
 }
 
 // Helper to convert Timestamp-like objects to proper format
@@ -371,6 +372,61 @@ export const deleteTransaction = async (transactionId: string): Promise<void> =>
     localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(filtered))
   } catch (error) {
     console.error('Error deleting transaction from localStorage:', error)
+    throw error
+  }
+}
+
+// Portfolio Account
+export const getPortfolioAccount = async (): Promise<PortfolioAccount | null> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.PORTFOLIO_ACCOUNT)
+    if (!stored) return null
+    
+    const account: PortfolioAccount = JSON.parse(stored)
+    if (account.updatedAt) {
+      account.updatedAt = normalizeTimestamp(account.updatedAt)
+    }
+    return account
+  } catch (error) {
+    console.error('Error loading portfolio account from localStorage:', error)
+    return null
+  }
+}
+
+export const setPortfolioAccount = async (accountData: Omit<PortfolioAccount, 'id' | 'updatedAt'>): Promise<void> => {
+  try {
+    const account: PortfolioAccount = {
+      ...accountData,
+      id: 'local_account',
+      updatedAt: toTimestamp(new Date())
+    }
+    localStorage.setItem(STORAGE_KEYS.PORTFOLIO_ACCOUNT, JSON.stringify(account))
+  } catch (error) {
+    console.error('Error saving portfolio account to localStorage:', error)
+    throw error
+  }
+}
+
+export const updatePortfolioAccount = async (updates: Partial<PortfolioAccount>): Promise<void> => {
+  try {
+    const account = await getPortfolioAccount()
+    if (!account) {
+      // Create new account with defaults if it doesn't exist
+      await setPortfolioAccount({
+        totalInvested: updates.totalInvested || 0,
+        cash: updates.cash || 0
+      })
+      return
+    }
+    
+    const updated = {
+      ...account,
+      ...updates,
+      updatedAt: toTimestamp(new Date())
+    }
+    localStorage.setItem(STORAGE_KEYS.PORTFOLIO_ACCOUNT, JSON.stringify(updated))
+  } catch (error) {
+    console.error('Error updating portfolio account in localStorage:', error)
     throw error
   }
 }

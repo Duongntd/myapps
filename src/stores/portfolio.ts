@@ -8,8 +8,12 @@ import {
   getTransactions as getTransactionsFirebase,
   addTransaction as addTransactionFirebase,
   deleteTransaction as deleteTransactionFirebase,
+  getPortfolioAccount as getAccountFirebase,
+  setPortfolioAccount as setAccountFirebase,
+  updatePortfolioAccount as updateAccountFirebase,
   type StockHolding,
-  type Transaction
+  type Transaction,
+  type PortfolioAccount
 } from '@/firebase/firestore'
 import { 
   getStockHoldings as getHoldingsLocal, 
@@ -18,7 +22,9 @@ import {
   deleteStockHolding as deleteHoldingLocal,
   getTransactions as getTransactionsLocal,
   addTransaction as addTransactionLocal,
-  deleteTransaction as deleteTransactionLocal
+  deleteTransaction as deleteTransactionLocal,
+  getPortfolioAccount as getAccountLocal,
+  updatePortfolioAccount as updateAccountLocal
 } from '@/storage/localStorage'
 import { useAuthStore } from './auth'
 import type { DocumentReference, DocumentData } from 'firebase/firestore'
@@ -33,8 +39,19 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   const holdings: Ref<StockHolding[]> = ref([])
   const transactions: Ref<Transaction[]> = ref([])
   const stockPrices: Ref<Map<string, StockPrice>> = ref(new Map())
+  const account: Ref<PortfolioAccount | null> = ref(null)
   const loading: Ref<boolean> = ref(false)
   const error: Ref<string | null> = ref(null)
+
+  // Computed: Total cash available
+  const totalCash = computed<number>(() => {
+    return account.value?.cash || 0
+  })
+
+  // Computed: Total invested money (deposits)
+  const totalInvested = computed<number>(() => {
+    return account.value?.totalInvested || 0
+  })
 
   // Computed: Get holdings with current prices
   const holdingsWithPrices = computed(() => {
@@ -44,7 +61,6 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       const currentValue = currentPrice * holding.quantity
       const costBasis = holding.averagePrice * holding.quantity
       const nav = currentValue - costBasis
-      const navPercent = costBasis > 0 ? (nav / costBasis) * 100 : 0
 
       return {
         ...holding,
@@ -52,29 +68,44 @@ export const usePortfolioStore = defineStore('portfolio', () => {
         currentValue,
         costBasis,
         nav,
-        navPercent
+        navPercent: 0 // Will be calculated after portfolio value is known
       }
     })
   })
 
-  // Computed: Total portfolio value
-  const totalPortfolioValue = computed(() => {
-    return holdingsWithPrices.value.reduce((sum, holding) => sum + holding.currentValue, 0)
+  // Computed: Total stock value (sum of all holdings' current value)
+  const totalStockValue = computed<number>(() => {
+    return holdingsWithPrices.value.reduce((sum: number, holding) => sum + holding.currentValue, 0)
+  })
+
+  // Computed: Total portfolio value = cash + stock value
+  const totalPortfolioValue = computed<number>(() => {
+    return totalCash.value + totalStockValue.value
+  })
+
+  // Computed: Holdings with NAV% calculated (needs portfolio value)
+  const holdingsWithNAVPercent = computed(() => {
+    const portfolioValue = totalPortfolioValue.value
+    return holdingsWithPrices.value.map(holding => ({
+      ...holding,
+      // NAV% = (stock value / total portfolio value) * 100
+      navPercent: portfolioValue > 0 ? (holding.currentValue / portfolioValue) * 100 : 0
+    }))
   })
 
   // Computed: Total cost basis
-  const totalCostBasis = computed(() => {
-    return holdings.value.reduce((sum, holding) => sum + (holding.averagePrice * holding.quantity), 0)
+  const totalCostBasis = computed<number>(() => {
+    return holdings.value.reduce((sum: number, holding) => sum + (holding.averagePrice * holding.quantity), 0)
   })
 
-  // Computed: Total NAV
-  const totalNAV = computed(() => {
-    return totalPortfolioValue.value - totalCostBasis.value
+  // Computed: Total NAV (stock value - cost basis)
+  const totalNAV = computed<number>(() => {
+    return totalStockValue.value - totalCostBasis.value
   })
 
-  // Computed: Total NAV percentage
-  const totalNAVPercent = computed(() => {
-    return totalCostBasis.value > 0 ? (totalNAV.value / totalCostBasis.value) * 100 : 0
+  // Computed: NAV percentage = (stock value / total portfolio value) * 100
+  const totalNAVPercent = computed<number>(() => {
+    return totalPortfolioValue.value > 0 ? (totalStockValue.value / totalPortfolioValue.value) * 100 : 0
   })
 
   const fetchHoldings = async (): Promise<void> => {
@@ -316,22 +347,91 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return priceData?.price || null
   }
 
+  const fetchAccount = async (): Promise<void> => {
+    const authStore = useAuthStore()
+    if (!authStore.isAuthenticated) return
+
+    loading.value = true
+    error.value = null
+    try {
+      if (authStore.localMode) {
+        account.value = await getAccountLocal()
+      } else if (authStore.user) {
+        account.value = await getAccountFirebase(authStore.user.uid)
+      }
+      
+      // Initialize with defaults if account doesn't exist
+      if (!account.value) {
+        account.value = {
+          totalInvested: 0,
+          cash: 0
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load account'
+      error.value = errorMessage
+      console.error('Error fetching account:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const updateAccount = async (updates: Partial<PortfolioAccount>): Promise<void> => {
+    const authStore = useAuthStore()
+    if (!authStore.isAuthenticated) throw new Error('User not authenticated')
+
+    error.value = null
+    try {
+      const updatedAccount = {
+        ...(account.value || { totalInvested: 0, cash: 0 }),
+        ...updates
+      }
+
+      if (authStore.localMode) {
+        await updateAccountLocal(updatedAccount)
+      } else if (authStore.user) {
+        // Check if account exists
+        const existing = await getAccountFirebase(authStore.user.uid)
+        if (existing) {
+          await updateAccountFirebase(authStore.user.uid, updatedAccount)
+        } else {
+          await setAccountFirebase(authStore.user.uid, updatedAccount)
+        }
+      } else {
+        throw new Error('User not authenticated')
+      }
+
+      await fetchAccount()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update account'
+      error.value = errorMessage
+      console.error('Error updating account:', err)
+      throw err
+    }
+  }
+
   return {
     holdings,
     transactions,
     stockPrices,
+    account,
     loading,
     error,
-    holdingsWithPrices,
+    holdingsWithPrices: holdingsWithNAVPercent,
+    totalStockValue,
+    totalCash,
+    totalInvested,
     totalPortfolioValue,
     totalCostBasis,
     totalNAV,
     totalNAVPercent,
     fetchHoldings,
     fetchTransactions,
+    fetchAccount,
     createTransaction,
     removeTransaction,
     updateStockPrice,
-    getStockPrice
+    getStockPrice,
+    updateAccount
   }
 })

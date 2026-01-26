@@ -67,6 +67,13 @@ export interface Transaction {
   createdAt?: Timestamp
 }
 
+export interface PortfolioAccount {
+  id?: string
+  totalInvested: number // Total money deposited/invested
+  cash: number // Available cash
+  updatedAt?: Timestamp
+}
+
 // Helper to get user's collection path
 const getUserCollection = (userId: string, collectionName: string): CollectionReference<DocumentData> => {
   return collection(db, `users/${userId}/${collectionName}`)
@@ -194,4 +201,30 @@ export const addTransaction = async (userId: string, transactionData: Omit<Trans
 export const deleteTransaction = async (userId: string, transactionId: string): Promise<void> => {
   const transactionRef = doc(db, `users/${userId}/transactions/${transactionId}`)
   return await deleteDoc(transactionRef)
+}
+
+// Portfolio Account
+export const getPortfolioAccount = async (userId: string): Promise<PortfolioAccount | null> => {
+  const accountRef = doc(db, `users/${userId}/portfolioAccount/account`)
+  const accountSnap = await getDoc(accountRef)
+  if (accountSnap.exists()) {
+    return { id: accountSnap.id, ...accountSnap.data() } as PortfolioAccount
+  }
+  return null
+}
+
+export const setPortfolioAccount = async (userId: string, accountData: Omit<PortfolioAccount, 'id' | 'updatedAt'>): Promise<void> => {
+  const accountRef = doc(db, `users/${userId}/portfolioAccount/account`)
+  await setDoc(accountRef, {
+    ...accountData,
+    updatedAt: Timestamp.now()
+  }, { merge: true })
+}
+
+export const updatePortfolioAccount = async (userId: string, updates: UpdateData<PortfolioAccount>): Promise<void> => {
+  const accountRef = doc(db, `users/${userId}/portfolioAccount/account`)
+  return await updateDoc(accountRef, {
+    ...updates,
+    updatedAt: Timestamp.now()
+  })
 }

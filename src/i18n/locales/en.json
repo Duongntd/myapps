@@ -41,8 +41,18 @@
     "totalValue": "Total Value",
     "totalCost": "Total Cost",
     "totalNAV": "Total NAV",
+    "performance": "Performance",
+    "performanceDesc": "Portfolio return",
+    "totalInvested": "Total Invested",
+    "totalCash": "Total Cash",
+    "totalStockValue": "Total Stock Value",
+    "totalPortfolioValue": "Total Portfolio Value",
+    "deposits": "Deposits",
+    "available": "Available",
+    "cashPlusStocks": "Cash + Stocks",
     "holdings": "holdings",
     "averagePrice": "Average price",
+    "editPrice": "Edit Price",
     "myHoldings": "My Holdings",
     "symbol": "Symbol",
     "quantity": "Quantity",
@@ -72,7 +82,13 @@
     "transactionError": "Failed to create transaction. Please try again.",
     "deleteConfirm": "Are you sure you want to delete this transaction?",
     "deleteError": "Failed to delete transaction. Please try again.",
-    "settingsDesc": "Portfolio Tracker specific settings will be available here in future releases."
+    "settingsDesc": "Manage your portfolio account settings",
+    "totalInvestedDesc": "Total amount of money you have deposited/invested",
+    "totalCashDesc": "Available cash in your portfolio",
+    "totalInvestedInvalid": "Total invested must be greater than or equal to 0",
+    "totalCashInvalid": "Total cash must be greater than or equal to 0",
+    "accountUpdated": "Account updated successfully!",
+    "updateError": "Failed to update account. Please try again."
   },
   "home": {
     "readTracker": {
