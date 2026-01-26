@@ -37,6 +37,9 @@
       "description": "Track your reading time, manage books, set goals, and build better reading habits.",
       "openApp": "Open App"
     },
+    "signIn": {
+      "description": "Sign in with Google to sync your data across all your devices."
+    },
     "localMode": {
       "title": "Use without login",
       "description": "You can use the app without signing in. Your data will be stored locally in your browser and will be lost if you clear your cache or switch devices.",

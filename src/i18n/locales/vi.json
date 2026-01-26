@@ -37,6 +37,9 @@
       "description": "Theo dõi thời gian đọc sách, quản lý sách, đặt mục tiêu và xây dựng thói quen đọc tốt hơn.",
       "openApp": "Mở ứng dụng"
     },
+    "signIn": {
+      "description": "Đăng nhập bằng Google để đồng bộ dữ liệu trên tất cả các thiết bị của bạn."
+    },
     "localMode": {
       "title": "Sử dụng không cần đăng nhập",
       "description": "Bạn có thể sử dụng ứng dụng mà không cần đăng nhập. Dữ liệu của bạn sẽ được lưu trữ cục bộ trong trình duyệt và sẽ bị mất nếu bạn xóa bộ nhớ cache hoặc chuyển thiết bị.",

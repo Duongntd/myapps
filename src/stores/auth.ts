@@ -33,6 +33,15 @@ export const useAuthStore = defineStore('auth', () => {
   // Initialize on store creation
   initializeLocalMode()
 
+  // Add timeout to ensure loading state doesn't block UI indefinitely
+  // If Firebase auth doesn't respond within 3 seconds, assume not authenticated
+  setTimeout(() => {
+    if (loading.value && !localMode.value) {
+      console.warn('Firebase auth initialization timeout - showing sign-in option')
+      loading.value = false
+    }
+  }, 3000)
+
   const isAuthenticated: ComputedRef<boolean> = computed(() => !!user.value || localMode.value)
 
   const enableLocalMode = (): void => {
