@@ -213,7 +213,8 @@
     "signedInAs": "Đã đăng nhập với tư cách",
     "about": "Giới thiệu",
     "aboutDesc": "Read Tracker - Theo dõi thời gian đọc sách và xây dựng thói quen đọc tốt hơn.",
-    "version": "Phiên bản 1.0.0"
+    "version": "Phiên bản",
+    "buildDate": "Ngày xây dựng"
   },
   "language": {
     "selectLanguage": "Chọn ngôn ngữ",
