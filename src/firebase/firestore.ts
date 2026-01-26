@@ -48,6 +48,25 @@ export interface Goal {
   week?: number
 }
 
+export interface StockHolding {
+  id?: string
+  symbol: string
+  quantity: number
+  averagePrice: number // Average purchase price per share
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+}
+
+export interface Transaction {
+  id?: string
+  type: 'buy' | 'sell'
+  symbol: string
+  quantity: number
+  price: number // Price per share at transaction time
+  date: Timestamp
+  createdAt?: Timestamp
+}
+
 // Helper to get user's collection path
 const getUserCollection = (userId: string, collectionName: string): CollectionReference<DocumentData> => {
   return collection(db, `users/${userId}/${collectionName}`)
@@ -125,4 +144,54 @@ export const updateGoal = async (userId: string, goalId: string, updates: Update
 export const deleteGoal = async (userId: string, goalId: string): Promise<void> => {
   const goalRef = doc(db, `users/${userId}/goals/${goalId}`)
   return await deleteDoc(goalRef)
+}
+
+// Stock Holdings
+export const getStockHoldings = async (userId: string): Promise<StockHolding[]> => {
+  const holdingsRef = getUserCollection(userId, 'stockHoldings')
+  const snapshot = await getDocs(holdingsRef)
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StockHolding))
+}
+
+export const addStockHolding = async (userId: string, holdingData: Omit<StockHolding, 'id' | 'createdAt' | 'updatedAt'>): Promise<DocumentReference<DocumentData>> => {
+  const holdingsRef = getUserCollection(userId, 'stockHoldings')
+  return await addDoc(holdingsRef, {
+    ...holdingData,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now()
+  })
+}
+
+export const updateStockHolding = async (userId: string, holdingId: string, updates: UpdateData<StockHolding>): Promise<void> => {
+  const holdingRef = doc(db, `users/${userId}/stockHoldings/${holdingId}`)
+  return await updateDoc(holdingRef, {
+    ...updates,
+    updatedAt: Timestamp.now()
+  })
+}
+
+export const deleteStockHolding = async (userId: string, holdingId: string): Promise<void> => {
+  const holdingRef = doc(db, `users/${userId}/stockHoldings/${holdingId}`)
+  return await deleteDoc(holdingRef)
+}
+
+// Transactions
+export const getTransactions = async (userId: string): Promise<Transaction[]> => {
+  const transactionsRef = getUserCollection(userId, 'transactions')
+  const q = query(transactionsRef, orderBy('date', 'desc'))
+  const snapshot = await getDocs(q)
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction))
+}
+
+export const addTransaction = async (userId: string, transactionData: Omit<Transaction, 'id' | 'createdAt'>): Promise<DocumentReference<DocumentData>> => {
+  const transactionsRef = getUserCollection(userId, 'transactions')
+  return await addDoc(transactionsRef, {
+    ...transactionData,
+    createdAt: Timestamp.now()
+  })
+}
+
+export const deleteTransaction = async (userId: string, transactionId: string): Promise<void> => {
+  const transactionRef = doc(db, `users/${userId}/transactions/${transactionId}`)
+  return await deleteDoc(transactionRef)
 }

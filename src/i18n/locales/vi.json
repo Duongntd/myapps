@@ -15,7 +15,8 @@
     "tryAgain": "Thử lại",
     "signOut": "Đăng xuất",
     "signIn": "Đăng nhập",
-    "signInWithGoogle": "Đăng nhập bằng Google"
+    "signInWithGoogle": "Đăng nhập bằng Google",
+    "actions": "Hành động"
   },
   "app": {
     "name": "MyApps",
@@ -31,10 +32,57 @@
     "goals": "Mục tiêu",
     "settings": "Cài đặt"
   },
+  "portfolioTracker": {
+    "title": "📈 Portfolio Tracker",
+    "subtitle": "Quản lý danh mục cổ phiếu và theo dõi đầu tư của bạn",
+    "dashboard": "Bảng điều khiển",
+    "transactions": "Giao dịch",
+    "settings": "Cài đặt",
+    "totalValue": "Tổng giá trị",
+    "totalCost": "Tổng chi phí",
+    "totalNAV": "Tổng NAV",
+    "holdings": "cổ phiếu",
+    "averagePrice": "Giá trung bình",
+    "myHoldings": "Danh mục của tôi",
+    "symbol": "Mã",
+    "quantity": "Số lượng",
+    "avgPrice": "Giá TB",
+    "currentPrice": "Giá hiện tại",
+    "currentValue": "Giá trị hiện tại",
+    "nav": "NAV",
+    "navPercent": "NAV %",
+    "refreshPrices": "Làm mới giá",
+    "refreshing": "Đang làm mới...",
+    "loading": "Đang tải...",
+    "noHoldings": "Chưa có cổ phiếu nào. Thêm giao dịch đầu tiên để bắt đầu!",
+    "addFirstTransaction": "Thêm giao dịch đầu tiên",
+    "addTransaction": "Thêm giao dịch",
+    "transactionType": "Loại giao dịch",
+    "buy": "Mua",
+    "sell": "Bán",
+    "pricePerShare": "Giá mỗi cổ phiếu",
+    "date": "Ngày",
+    "type": "Loại",
+    "price": "Giá",
+    "total": "Tổng",
+    "noTransactions": "Chưa có giao dịch nào. Thêm giao dịch đầu tiên để bắt đầu!",
+    "symbolRequired": "Mã cổ phiếu là bắt buộc",
+    "quantityRequired": "Số lượng phải lớn hơn 0",
+    "priceRequired": "Giá phải lớn hơn 0",
+    "transactionError": "Không thể tạo giao dịch. Vui lòng thử lại.",
+    "deleteConfirm": "Bạn có chắc chắn muốn xóa giao dịch này?",
+    "deleteError": "Không thể xóa giao dịch. Vui lòng thử lại.",
+    "settingsDesc": "Cài đặt cụ thể cho Portfolio Tracker sẽ có sẵn ở đây trong các phiên bản tương lai."
+  },
   "home": {
     "readTracker": {
       "name": "Read Tracker",
       "description": "Theo dõi thời gian đọc sách, quản lý sách, đặt mục tiêu và xây dựng thói quen đọc tốt hơn.",
+      "openApp": "Mở ứng dụng"
+    },
+    "portfolioTracker": {
+      "name": "Portfolio Tracker",
+      "description": "Quản lý danh mục cổ phiếu, theo dõi giá trực tiếp và giám sát hiệu suất đầu tư của bạn.",
       "openApp": "Mở ứng dụng"
     },
     "signIn": {
