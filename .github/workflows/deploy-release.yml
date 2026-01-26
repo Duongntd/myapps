@@ -42,16 +42,29 @@ jobs:
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
+          # Write JSON to temporary file for jq to parse
+          echo "$FIREBASE_CONFIG" > /tmp/firebase-config.json
+          
+          # Validate JSON is valid
+          if ! jq empty /tmp/firebase-config.json 2>/dev/null; then
+            echo "Error: Invalid JSON in FIREBASE_CONFIG secret"
+            echo "First 200 characters of secret:"
+            head -c 200 /tmp/firebase-config.json
+            exit 1
+          fi
+          
           # Parse Firebase config JSON and extract values
-          # jq is pre-installed on Ubuntu runners
-          echo "api_key=$(echo '$FIREBASE_CONFIG' | jq -r '.apiKey')" >> $GITHUB_OUTPUT
-          echo "auth_domain=$(echo '$FIREBASE_CONFIG' | jq -r '.authDomain')" >> $GITHUB_OUTPUT
-          echo "project_id=$(echo '$FIREBASE_CONFIG' | jq -r '.projectId')" >> $GITHUB_OUTPUT
-          echo "storage_bucket=$(echo '$FIREBASE_CONFIG' | jq -r '.storageBucket')" >> $GITHUB_OUTPUT
-          echo "messaging_sender_id=$(echo '$FIREBASE_CONFIG' | jq -r '.messagingSenderId')" >> $GITHUB_OUTPUT
-          echo "app_id=$(echo '$FIREBASE_CONFIG' | jq -r '.appId')" >> $GITHUB_OUTPUT
+          echo "api_key=$(jq -r '.apiKey' /tmp/firebase-config.json)" >> $GITHUB_OUTPUT
+          echo "auth_domain=$(jq -r '.authDomain' /tmp/firebase-config.json)" >> $GITHUB_OUTPUT
+          echo "project_id=$(jq -r '.projectId' /tmp/firebase-config.json)" >> $GITHUB_OUTPUT
+          echo "storage_bucket=$(jq -r '.storageBucket' /tmp/firebase-config.json)" >> $GITHUB_OUTPUT
+          echo "messaging_sender_id=$(jq -r '.messagingSenderId' /tmp/firebase-config.json)" >> $GITHUB_OUTPUT
+          echo "app_id=$(jq -r '.appId' /tmp/firebase-config.json)" >> $GITHUB_OUTPUT
           # measurementId is optional
-          echo "measurement_id=$(echo '$FIREBASE_CONFIG' | jq -r '.measurementId // empty')" >> $GITHUB_OUTPUT
+          echo "measurement_id=$(jq -r '.measurementId // empty' /tmp/firebase-config.json)" >> $GITHUB_OUTPUT
+          
+          # Clean up
+          rm -f /tmp/firebase-config.json
 
       - name: Build with version and release notes
         env:
