@@ -18,8 +18,9 @@
           <div v-if="authStore.loading" class="px-2 sm:px-4">
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>
           </div>
-          <GoogleLoginButton v-else-if="!authStore.isAuthenticated" />
-          <UserProfile v-else />
+          <GoogleLoginButton v-else-if="!authStore.isAuthenticated && !authStore.localMode" />
+          <LocalModeProfile v-else-if="authStore.localMode || authStore.syncingFromLocal" />
+          <UserProfile v-else-if="authStore.user && !authStore.syncingFromLocal" />
         </nav>
       </div>
     </div>
@@ -30,6 +31,7 @@
 import { useAuthStore } from '@/stores/auth'
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton.vue'
 import UserProfile from '@/components/auth/UserProfile.vue'
+import LocalModeProfile from '@/components/auth/LocalModeProfile.vue'
 import LanguageSelector from '@/components/common/LanguageSelector.vue'
 
 const authStore = useAuthStore()

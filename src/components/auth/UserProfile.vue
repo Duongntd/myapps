@@ -73,12 +73,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useClickOutside } from '@/composables/useClickOutside'
 import { useI18n } from 'vue-i18n'
 import type { User } from 'firebase/auth'
 
 useI18n() // Required for $t() in template
+const router = useRouter()
 const authStore = useAuthStore()
 const showDropdown = ref(false)
 const dropdownRef = ref<HTMLElement>()
@@ -106,6 +108,8 @@ const handleLogout = async (): Promise<void> => {
   try {
     await authStore.signOut()
     closeDropdown()
+    // Redirect to home page after sign out
+    router.push('/')
   } catch (error) {
     console.error('Logout error:', error)
   }
