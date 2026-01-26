@@ -37,6 +37,9 @@
       "description": "Track your reading time, manage books, set goals, and build better reading habits.",
       "openApp": "Open App"
     },
+    "signIn": {
+      "description": "Sign in with Google to sync your data across all your devices."
+    },
     "localMode": {
       "title": "Use without login",
       "description": "You can use the app without signing in. Your data will be stored locally in your browser and will be lost if you clear your cache or switch devices.",
@@ -105,6 +108,11 @@
     "dateRequired": "Date is required",
     "durationRequired": "Reading time must be greater than 0",
     "saveError": "Failed to save session. Please try again."
+  },
+  "sessionPrompt": {
+    "title": "Add Reading Session?",
+    "message": "You haven't added a reading session today. Would you like to add one now?",
+    "addSession": "Add Session"
   },
   "books": {
     "title": "My Books",

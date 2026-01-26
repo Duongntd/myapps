@@ -37,6 +37,9 @@
       "description": "Theo dõi thời gian đọc sách, quản lý sách, đặt mục tiêu và xây dựng thói quen đọc tốt hơn.",
       "openApp": "Mở ứng dụng"
     },
+    "signIn": {
+      "description": "Đăng nhập bằng Google để đồng bộ dữ liệu trên tất cả các thiết bị của bạn."
+    },
     "localMode": {
       "title": "Sử dụng không cần đăng nhập",
       "description": "Bạn có thể sử dụng ứng dụng mà không cần đăng nhập. Dữ liệu của bạn sẽ được lưu trữ cục bộ trong trình duyệt và sẽ bị mất nếu bạn xóa bộ nhớ cache hoặc chuyển thiết bị.",
@@ -105,6 +108,11 @@
     "dateRequired": "Ngày là bắt buộc",
     "durationRequired": "Thời gian đọc phải lớn hơn 0",
     "saveError": "Không thể lưu phiên. Vui lòng thử lại."
+  },
+  "sessionPrompt": {
+    "title": "Thêm phiên đọc sách?",
+    "message": "Bạn chưa thêm phiên đọc sách hôm nay. Bạn có muốn thêm một phiên ngay bây giờ không?",
+    "addSession": "Thêm phiên"
   },
   "books": {
     "title": "Sách của tôi",
