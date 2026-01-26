@@ -1,9 +1,228 @@
 <template>
-  <div class="py-4">
-    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Books</h2>
-    <p class="text-gray-600 italic">Coming soon - Manage your reading list here.</p>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-semibold text-gray-900">My Books</h2>
+        <button
+          @click="showForm = true"
+          class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Book
+        </button>
+      </div>
+    </div>
+
+    <!-- Book Form Modal -->
+    <BookForm
+      v-if="showForm"
+      :book="editingBook"
+      @close="handleFormClose"
+      @save="handleSaveBook"
+    />
+
+    <!-- Status Filter Tabs -->
+    <div class="bg-white rounded-lg shadow">
+      <div class="border-b border-gray-200">
+        <nav class="flex -mb-px">
+          <button
+            v-for="status in statusFilters"
+            :key="status.value"
+            @click="activeFilter = status.value"
+            :class="[
+              'px-6 py-4 text-sm font-medium border-b-2 transition-colors',
+              activeFilter === status.value
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            ]"
+          >
+            {{ status.label }}
+            <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+              {{ getBooksByStatus(status.value).length }}
+            </span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="booksStore.loading" class="p-12 text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading books...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="filteredBooks.length === 0" class="p-12 text-center">
+        <div class="text-6xl mb-4">📚</div>
+        <p class="text-gray-600 text-lg mb-2">No books in this category</p>
+        <p class="text-gray-500 text-sm">Add a book to get started!</p>
+      </div>
+
+      <!-- Books Grid -->
+      <div v-else class="p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div
+            v-for="book in filteredBooks"
+            :key="book.id"
+            class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+            @click="viewBookDetails(book)"
+          >
+            <!-- Book Cover -->
+            <div class="aspect-[2/3] bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+              <img
+                v-if="book.coverImage"
+                :src="book.coverImage"
+                :alt="book.title"
+                class="w-full h-full object-cover"
+              />
+              <div v-else class="text-6xl text-gray-400">📖</div>
+            </div>
+
+            <!-- Book Info -->
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">{{ book.title }}</h3>
+              <p class="text-sm text-gray-600 mb-3">{{ book.author }}</p>
+              
+              <!-- Status Badge -->
+              <div class="flex items-center justify-between">
+                <span
+                  :class="[
+                    'px-2 py-1 text-xs font-medium rounded',
+                    getStatusClass(book.status)
+                  ]"
+                >
+                  {{ formatStatus(book.status) }}
+                </span>
+                
+                <!-- Actions -->
+                <div class="flex gap-1">
+                  <button
+                    @click.stop="editBook(book)"
+                    class="p-1.5 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                    title="Edit book"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    @click.stop="deleteBook(book.id!)"
+                    class="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Delete book"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Details Modal -->
+    <BookDetailsModal
+      v-if="selectedBook"
+      :book="selectedBook"
+      @close="selectedBook = null"
+      @update-status="handleStatusUpdate"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useBooksStore } from '@/stores/books'
+import { useReadingSessionsStore } from '@/stores/readingSessions'
+import BookForm from '@/components/ReadTracker/BookForm.vue'
+import BookDetailsModal from '@/components/ReadTracker/BookDetailsModal.vue'
+import type { Book } from '@/firebase/firestore'
+
+const booksStore = useBooksStore()
+const sessionsStore = useReadingSessionsStore()
+
+const showForm = ref(false)
+const editingBook = ref<Book | null>(null)
+const selectedBook = ref<Book | null>(null)
+const activeFilter = ref<'all' | 'reading' | 'completed' | 'wantToRead'>('all')
+
+const statusFilters = [
+  { label: 'All', value: 'all' as const },
+  { label: 'Reading', value: 'reading' as const },
+  { label: 'Completed', value: 'completed' as const },
+  { label: 'Want to Read', value: 'wantToRead' as const }
+]
+
+// Fetch data on mount
+onMounted(async () => {
+  await booksStore.fetchBooks()
+  await sessionsStore.fetchSessions()
+})
+
+// Filter books by status
+const getBooksByStatus = (status: string) => {
+  if (status === 'all') return booksStore.books
+  return booksStore.books.filter(book => book.status === status)
+}
+
+const filteredBooks = computed(() => {
+  return getBooksByStatus(activeFilter.value)
+})
+
+const editBook = (book: Book) => {
+  editingBook.value = { ...book }
+  showForm.value = true
+}
+
+const viewBookDetails = (book: Book) => {
+  selectedBook.value = book
+}
+
+const handleFormClose = () => {
+  showForm.value = false
+  editingBook.value = null
+}
+
+const handleSaveBook = async () => {
+  showForm.value = false
+  editingBook.value = null
+  await booksStore.fetchBooks()
+}
+
+const handleStatusUpdate = async () => {
+  await booksStore.fetchBooks()
+}
+
+const deleteBook = async (bookId: string) => {
+  if (confirm('Are you sure you want to delete this book?')) {
+    try {
+      await booksStore.removeBook(bookId)
+    } catch (error) {
+      console.error('Error deleting book:', error)
+      alert('Failed to delete book. Please try again.')
+    }
+  }
+}
+
+const formatStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    reading: 'Reading',
+    completed: 'Completed',
+    wantToRead: 'Want to Read'
+  }
+  return statusMap[status] || status
+}
+
+const getStatusClass = (status: string): string => {
+  const classes: Record<string, string> = {
+    reading: 'bg-blue-100 text-blue-800',
+    completed: 'bg-green-100 text-green-800',
+    wantToRead: 'bg-gray-100 text-gray-800'
+  }
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
 </script>
