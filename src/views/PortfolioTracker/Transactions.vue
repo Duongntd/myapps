@@ -50,10 +50,11 @@
 
           <!-- Symbol -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="tx-symbol" class="block text-sm font-medium text-gray-700 mb-2">
               {{ $t('portfolioTracker.symbol') }} <span class="text-red-500">*</span>
             </label>
             <input
+              id="tx-symbol"
               v-model="form.symbol"
               type="text"
               required
@@ -67,10 +68,11 @@
 
           <!-- Quantity -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="tx-quantity" class="block text-sm font-medium text-gray-700 mb-2">
               {{ $t('portfolioTracker.quantity') }} <span class="text-red-500">*</span>
             </label>
             <input
+              id="tx-quantity"
               v-model.number="form.quantity"
               type="number"
               required
@@ -85,10 +87,11 @@
 
           <!-- Price -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="tx-price" class="block text-sm font-medium text-gray-700 mb-2">
               {{ $t('portfolioTracker.pricePerShare') }} <span class="text-red-500">*</span>
             </label>
             <input
+              id="tx-price"
               v-model.number="form.price"
               type="number"
               required

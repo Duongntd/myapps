@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Portfolio Tracker functionality', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Welcome to MyApps' })).toBeVisible()
   })
 
   test('Dashboard: shows portfolio dashboard and holdings section', async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe('Portfolio Tracker functionality', () => {
 
   test('Transactions: add transaction with source and filter by source', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Welcome to MyApps' })).toBeVisible()
     await page.getByRole('button', { name: /open app/i }).nth(1).click()
     await expect(page).toHaveURL(/\/portfolio-tracker/)
     await page.goto('/portfolio-tracker/transactions')
@@ -36,13 +36,14 @@ test.describe('Portfolio Tracker functionality', () => {
     await sourceInput.fill('Trading 212')
     await page.getByRole('button', { name: /save/i }).click()
 
-    await expect(page.getByText('Trading 212')).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText('AAPL')).toBeVisible()
+    const transactionsTable = page.getByRole('table')
+    await expect(transactionsTable.getByText('Trading 212')).toBeVisible({ timeout: 5000 })
+    await expect(transactionsTable.getByText('AAPL')).toBeVisible()
 
     const filterSelect = page.getByRole('combobox', { name: /filter by source/i })
     await expect(filterSelect).toBeVisible()
     await filterSelect.selectOption('Trading 212')
-    await expect(page.getByText('Trading 212')).toBeVisible()
-    await expect(page.getByText('AAPL')).toBeVisible()
+    await expect(transactionsTable.getByText('Trading 212')).toBeVisible()
+    await expect(transactionsTable.getByText('AAPL')).toBeVisible()
   })
 })
