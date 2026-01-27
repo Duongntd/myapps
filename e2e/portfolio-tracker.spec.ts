@@ -46,4 +46,24 @@ test.describe('Portfolio Tracker functionality', () => {
     await expect(transactionsTable.getByText('Trading 212')).toBeVisible()
     await expect(transactionsTable.getByText('AAPL')).toBeVisible()
   })
+
+  test('Dashboard: CASH is displayed like a stock in My Holdings when cash > 0 (#43)', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: /open app/i }).nth(1).click()
+    await expect(page).toHaveURL(/\/portfolio-tracker/)
+
+    await page.goto('/portfolio-tracker/settings')
+    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
+
+    const numberInputs = page.getByRole('spinbutton')
+    await numberInputs.first().fill('1000')
+    await numberInputs.nth(1).fill('5000')
+    await page.getByRole('button', { name: /save/i }).click()
+
+    await page.goto('/portfolio-tracker/dashboard')
+    await expect(page.getByRole('heading', { name: 'My Holdings' })).toBeVisible()
+    const holdingsTable = page.getByRole('table')
+    await expect(holdingsTable.getByText('CASH')).toBeVisible({ timeout: 8000 })
+    await expect(holdingsTable.getByText('$5,000.00')).toBeVisible()
+  })
 })

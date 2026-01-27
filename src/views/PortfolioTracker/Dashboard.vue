@@ -89,10 +89,6 @@
                 <option v-for="s in distinctHoldingSources" :key="s" :value="s">{{ s }}</option>
               </select>
             </div>
-            <div class="text-sm text-gray-600">
-              <span class="font-medium">{{ $t('portfolioTracker.totalCash') }}:</span>
-              <span class="ml-1 font-semibold text-gray-900">{{ formatCurrency(portfolioStore.totalCash) }}</span>
-            </div>
           </div>
         </div>
       </div>
@@ -102,7 +98,7 @@
         <p class="text-sm text-gray-600">{{ $t('common.loading') }}</p>
       </div>
 
-      <div v-else-if="portfolioStore.holdings.length === 0" class="p-8 text-center">
+      <div v-else-if="portfolioStore.holdings.length === 0 && portfolioStore.totalCash === 0" class="p-8 text-center">
         <p class="text-gray-600 mb-4">{{ $t('portfolioTracker.noHoldings') }}</p>
         <router-link
           to="/portfolio-tracker/transactions"
@@ -138,54 +134,59 @@
                 <span class="text-sm text-gray-600">{{ (holding.source || '').trim() || '—' }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-sm text-gray-900">{{ holding.quantity }}</span>
+                <span class="text-sm text-gray-900">{{ holding.id === 'cash' ? '—' : holding.quantity }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-sm text-gray-900">{{ formatCurrency(holding.averagePrice) }}</span>
+                <span class="text-sm text-gray-900">{{ holding.id === 'cash' ? '—' : formatCurrency(holding.averagePrice) }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <div v-if="editingPrice === holding.id" class="flex items-center gap-2">
-                  <input
-                    v-model.number="editPriceValue"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    @keyup.enter="savePrice(holding.symbol)"
-                    @keyup.esc="cancelEditPrice"
-                  />
-                  <button
-                    @click="savePrice(holding.symbol)"
-                    class="text-green-600 hover:text-green-800 text-sm font-medium"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    @click="cancelEditPrice"
-                    class="text-red-600 hover:text-red-800 text-sm font-medium"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div v-else class="flex items-center gap-2">
-                  <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentPrice) }}</span>
-                  <span v-else class="text-sm text-gray-400">{{ $t('portfolioTracker.loading') }}</span>
-                  <button
-                    @click="startEditPrice(holding.id!, holding.currentPrice)"
-                    class="text-primary-600 hover:text-primary-800 text-xs"
-                    :title="$t('portfolioTracker.editPrice')"
-                  >
-                    ✏️
-                  </button>
-                </div>
+                <template v-if="holding.id === 'cash'">
+                  <span class="text-sm text-gray-500">—</span>
+                </template>
+                <template v-else>
+                  <div v-if="editingPrice === holding.id" class="flex items-center gap-2">
+                    <input
+                      v-model.number="editPriceValue"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      @keyup.enter="savePrice(holding.symbol)"
+                      @keyup.esc="cancelEditPrice"
+                    />
+                    <button
+                      @click="savePrice(holding.symbol)"
+                      class="text-green-600 hover:text-green-800 text-sm font-medium"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      @click="cancelEditPrice"
+                      class="text-red-600 hover:text-red-800 text-sm font-medium"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div v-else class="flex items-center gap-2">
+                    <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentPrice) }}</span>
+                    <span v-else class="text-sm text-gray-400">{{ $t('portfolioTracker.loading') }}</span>
+                    <button
+                      @click="startEditPrice(holding.id!, holding.currentPrice)"
+                      class="text-primary-600 hover:text-primary-800 text-xs"
+                      :title="$t('portfolioTracker.editPrice')"
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                </template>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentValue) }}</span>
+                <span v-if="holding.id === 'cash' || holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentValue) }}</span>
                 <span v-else class="text-sm text-gray-400">-</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span
-                  v-if="holding.currentPrice > 0"
+                  v-if="holding.id === 'cash' || holding.currentPrice > 0"
                   class="text-sm font-medium"
                   :class="holding.navPercent >= 0 ? 'text-green-600' : 'text-red-600'"
                 >
@@ -221,10 +222,26 @@ const distinctHoldingSources = computed(() => {
   return [...set].sort()
 })
 
+// Holdings list for My Holdings table; includes a CASH row when totalCash > 0 (issue #43)
 const filteredHoldings = computed(() => {
   const list = portfolioStore.holdingsWithPrices
-  if (!sourceFilter.value) return list
-  return list.filter(h => (h.source ?? '').trim() === sourceFilter.value)
+  const filtered = sourceFilter.value
+    ? list.filter(h => (h.source ?? '').trim() === sourceFilter.value)
+    : list
+  const cash = portfolioStore.totalCash
+  const total = portfolioStore.totalPortfolioValue
+  if (cash <= 0) return filtered
+  const cashRow = {
+    id: 'cash' as const,
+    symbol: 'CASH',
+    source: '',
+    quantity: 0,
+    averagePrice: 0,
+    currentPrice: 0,
+    currentValue: cash,
+    navPercent: total > 0 ? (cash / total) * 100 : 0
+  }
+  return [cashRow, ...filtered]
 })
 
 onMounted(async () => {
