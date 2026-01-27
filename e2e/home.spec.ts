@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const APP_ORIGIN = 'http://localhost:4173'
+const APP_ORIGIN = 'http://127.0.0.1:4173'
 
 test.describe('Home page', () => {
   test('loads and shows welcome and app cards', async ({ page }) => {
