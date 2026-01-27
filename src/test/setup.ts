@@ -14,6 +14,15 @@ const mockLocalStorage = {
 Object.defineProperty(globalThis, 'localStorage', { value: mockLocalStorage, writable: true })
 mockLocalStorage.setItem('preferredLanguage', 'en')
 
+// Mock Firebase config so modules importing it don't throw in CI (no .env)
+vi.mock('@/firebase/config', () => ({
+  __esModule: true,
+  default: {},
+  db: {},
+  auth: {},
+  analytics: null
+}))
+
 // Mock Firebase auth so stores and components don't call real Firebase
 vi.mock('@/firebase/auth', () => ({
   onAuthChange: (cb: (u: unknown) => void) => {

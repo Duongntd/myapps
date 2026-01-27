@@ -52,7 +52,8 @@ export interface StockHolding {
   id?: string
   symbol: string
   quantity: number
-  averagePrice: number // Average purchase price per share
+  averagePrice: number // Average purchase price per share (weighted average of buys)
+  currentPrice?: number // Manual/last-known price per share; default is last buy price
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }

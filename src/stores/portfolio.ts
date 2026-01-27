@@ -53,11 +53,33 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return account.value?.totalInvested || 0
   })
 
+  // Last buy price for a symbol (from most recent buy transaction)
+  const lastBuyPriceForSymbol = (symbol: string): number | null => {
+    const sym = symbol.toUpperCase()
+    const buys = transactions.value.filter(
+      t => t.type === 'buy' && t.symbol.toUpperCase() === sym
+    )
+    if (buys.length === 0) return null
+    const sorted = [...buys].sort((a, b) => {
+      const ta = a.date && 'seconds' in a.date ? a.date.seconds : 0
+      const tb = b.date && 'seconds' in b.date ? b.date.seconds : 0
+      return tb - ta
+    })
+    return sorted[0].price
+  }
+
   // Computed: Get holdings with current prices
+  // Current price: manual (holding.currentPrice) > in-memory (stockPrices) > last buy > average
   const holdingsWithPrices = computed(() => {
     return holdings.value.map(holding => {
-      const priceData = stockPrices.value.get(holding.symbol.toUpperCase())
-      const currentPrice = priceData?.price || 0
+      const sym = holding.symbol.toUpperCase()
+      const priceData = stockPrices.value.get(sym)
+      const currentPrice =
+        holding.currentPrice ??
+        priceData?.price ??
+        lastBuyPriceForSymbol(holding.symbol) ??
+        holding.averagePrice ??
+        0
       const currentValue = currentPrice * holding.quantity
       const costBasis = holding.averagePrice * holding.quantity
       const nav = currentValue - costBasis
@@ -120,6 +142,17 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       } else if (authStore.user) {
         holdings.value = await getHoldingsFirebase(authStore.user.uid)
       }
+      // Seed in-memory stockPrices from persisted currentPrice so UI shows it
+      holdings.value.forEach(h => {
+        if (h.currentPrice != null && h.currentPrice > 0) {
+          const sym = h.symbol.toUpperCase()
+          stockPrices.value.set(sym, {
+            symbol: sym,
+            price: h.currentPrice,
+            lastUpdated: new Date()
+          })
+        }
+      })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load holdings'
       error.value = errorMessage
@@ -205,11 +238,12 @@ export const usePortfolioStore = defineStore('portfolio', () => {
           })
         }
       } else {
-        // Create new holding
+        // Create new holding; default current price to buy price (manual tracking per #40)
         const newHolding: Omit<StockHolding, 'id' | 'createdAt' | 'updatedAt'> = {
           symbol: symbol,
           quantity: transactionData.quantity,
-          averagePrice: transactionData.price
+          averagePrice: transactionData.price,
+          currentPrice: transactionData.price
         }
 
         if (authStore.localMode) {
@@ -333,13 +367,36 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     }
   }
 
-  const updateStockPrice = (symbol: string, price: number): void => {
+  const updateStockPrice = async (symbol: string, price: number): Promise<void> => {
+    const authStore = useAuthStore()
     const upperSymbol = symbol.toUpperCase()
     stockPrices.value.set(upperSymbol, {
       symbol: upperSymbol,
       price,
       lastUpdated: new Date()
     })
+    // Persist manual current price to holding (manual tracking per #40)
+    const holding = holdings.value.find(h => h.symbol.toUpperCase() === upperSymbol)
+    if (holding?.id) {
+      try {
+        if (authStore.localMode) {
+          await updateHoldingLocal(holding.id, { currentPrice: price })
+        } else if (authStore.user) {
+          await updateHoldingFirebase(authStore.user.uid, holding.id, { currentPrice: price })
+        }
+        // Update local state so holding.currentPrice stays in sync
+        const idx = holdings.value.findIndex(h => h.id === holding.id)
+        if (idx !== -1) {
+          holdings.value = [
+            ...holdings.value.slice(0, idx),
+            { ...holdings.value[idx], currentPrice: price },
+            ...holdings.value.slice(idx + 1)
+          ]
+        }
+      } catch (err) {
+        console.error('Error persisting current price:', err)
+      }
+    }
   }
 
   const getStockPrice = (symbol: string): number | null => {
