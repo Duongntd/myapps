@@ -165,9 +165,6 @@ import {
   isThisWeek,
   isThisMonth,
   isThisYear,
-  startOfWeek,
-  startOfMonth,
-  startOfYear,
   getWeek,
   getYear
 } from 'date-fns'
@@ -211,7 +208,6 @@ const activeGoals = computed(() => {
 // Calculate goal progress
 const goalProgress = (goal: Goal) => {
   let currentMinutes = 0
-  const now = new Date()
 
   if (goal.type === 'daily') {
     currentMinutes = sessionsStore.sessions

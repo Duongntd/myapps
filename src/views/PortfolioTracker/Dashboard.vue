@@ -188,7 +188,7 @@ import { getMultipleStockPrices } from '@/utils/stockPrice'
 import { useI18n } from 'vue-i18n'
 
 const portfolioStore = usePortfolioStore()
-const { t } = useI18n()
+useI18n()
 const refreshing = ref(false)
 const editingPrice = ref<string | null>(null)
 const editPriceValue = ref<number>(0)

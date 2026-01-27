@@ -10,12 +10,12 @@ description: Fetches GitHub issues by issue number or project identifier (e.g., 
 This skill automates the workflow of:
 1. Fetching a GitHub issue by issue number or project identifier (e.g., MA-1)
 2. Analyzing the issue content and requirements
-3. Breaking it down into actionable deliverables
+3. Breaking it down into actionable deliverables (including testing tasks)
 4. Assigning the issue to the user or agent
 5. Updating the issue with the breakdown as a comment
 6. Creating a feature branch
 7. Creating a structured task list
-8. Implementing the solution
+8. Implementing the solution **and tests** (unit tests always; E2E when the feature has user-facing flows)
 9. Committing and pushing changes
 10. Creating a pull request
 
@@ -33,6 +33,7 @@ When the user provides an issue identifier (e.g., "#42", "42", or "MA-1"):
 1. **Determine the repository**:
    - Check `git remote -v` to get the repository URL
    - Extract owner and repo name (e.g., `owner/repo` from `https://github.com/owner/repo.git`)
+   - Default repo if not specified: `https://github.com/Duongntd/myapps.git`
 
 2. **Resolve project identifier** (if provided):
    - If identifier matches pattern like "MA-1", "PROJ-123", etc.:
@@ -73,87 +74,16 @@ Deliverable 1: [Specific task]
 
 Deliverable 2: [Specific task]
 - Subtask 2.1: [Actionable item]
+
+Deliverable N: Testing (always include when adding features)
+- Add unit tests for [new/changed components, utils, stores]
+- Add E2E tests for [user-facing flows] (if the feature has navigable UI or critical paths)
 ```
 
-### Step 3: Assign the Issue
+When the issue adds or changes user-facing behavior or logic, always include a **Testing** deliverable: unit tests for new/changed code, and E2E tests when the feature has pages, flows, or critical user journeys.
 
-After breaking down the issue, assign it:
 
-1. **Get assignee username**:
-   - If user specified an assignee, use that username
-   - Otherwise, check if user wants it assigned to them:
-     - Get GitHub username from git config: `git config user.name` or `git config github.user`
-     - Or use the repository owner if no user config found
-   - If user wants agent to "assign to itself", this typically means assigning to the user (agents can't be assigned)
-
-2. **Check for authentication token**:
-   - Before making API calls, check if token is available:
-     ```bash
-     # Check for GITHUB_TOKEN environment variable
-     [ -n "$GITHUB_TOKEN" ] && echo "Token available" || echo "Token not set"
-     
-     # Alternative: Check for GitHub CLI authentication
-     gh auth status 2>/dev/null && echo "GitHub CLI authenticated" || echo "GitHub CLI not authenticated"
-     ```
-
-3. **Assign via GitHub API**:
-   - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
-   - **Check token availability first**: Only attempt API call if `GITHUB_TOKEN` is set or GitHub CLI is authenticated
-   - Use PATCH: `https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}`
-   - Body: `{"assignees": ["username"]}`
-   - Headers: `-H "Authorization: token $GITHUB_TOKEN"` (if token available)
-   - **Alternative**: Use GitHub CLI if available: `gh issue assign {issue_number} {username}`
-
-4. **Handle assignment failure**:
-   - If token is not available, skip API call and inform user
-   - If API assignment fails (401 Bad credentials, 403 Forbidden), note it but continue
-   - Provide manual assignment instructions: "You can assign this issue manually at: https://github.com/{owner}/{repo}/issues/{issue_number}"
-   - User can manually assign later via GitHub UI
-
-### Step 4: Update Issue with Breakdown
-
-Post the breakdown as a comment on the issue:
-
-1. **Format the breakdown**:
-   - Create a markdown-formatted comment with the breakdown
-   - Include clear sections: Overview, Deliverables, Subtasks
-   - Use checkboxes for tracking: `- [ ] Task description`
-
-2. **Check for authentication token**:
-   - Before making API calls, verify token is available (see Step 3.2 above)
-
-3. **Post comment via GitHub API**:
-   - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
-   - **Check token availability first**: Only attempt API call if `GITHUB_TOKEN` is set or GitHub CLI is authenticated
-   - Use POST: `https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments`
-   - Body: `{"body": "## Implementation Breakdown\n\n[formatted breakdown]"}`
-   - Headers: `-H "Authorization: token $GITHUB_TOKEN"` (if token available)
-   - **Alternative**: Use GitHub CLI if available: `gh issue comment {issue_number} --body "..."`
-
-4. **Comment format example**:
-   ```markdown
-   ## Implementation Breakdown
-   
-   ### Overview
-   [Brief summary of approach]
-   
-   ### Deliverables
-   
-   **Deliverable 1: [Name]**
-   - [ ] Subtask 1.1
-   - [ ] Subtask 1.2
-   
-   **Deliverable 2: [Name]**
-   - [ ] Subtask 2.1
-   ```
-
-5. **Handle comment failure**:
-   - If token is not available, skip API call and display the breakdown to user
-   - If API comment fails (401 Bad credentials, 403 Forbidden), display the breakdown to user
-   - Provide manual comment instructions: "You can add this comment manually at: https://github.com/{owner}/{repo}/issues/{issue_number}"
-   - User can manually add the comment via GitHub UI
-
-### Step 5: Create Feature Branch
+### Step 3: Create Feature Branch
 
 Before starting implementation, create a branch:
 
@@ -174,26 +104,28 @@ Before starting implementation, create a branch:
    - Confirm branch exists: `git branch`
    - Verify clean working directory before starting
 
-### Step 6: Create Task List
+### Step 4: Create Task List
 
 Use `todo_write` to create a structured task list:
 
 - Group related tasks under logical deliverables
 - Mark dependencies clearly (e.g., "pending" until prerequisite completes)
-- Include verification/testing tasks
+- **Always include testing tasks**: unit tests for new/modified logic, and E2E tests when the feature has user-facing flows (see [Testing Requirements](#testing-requirements) below)
 - Set first task to "in_progress"
 
-### Step 7: Start Implementation
+### Step 5: Start Implementation
 
 Begin with the first task:
 
 1. **Read relevant files**: Understand current codebase structure
 2. **Make changes**: Implement the feature following project conventions
-3. **Update todos**: Mark completed tasks, move to next
-4. **Continue iteratively**: Work through deliverables systematically
-5. **Commit incrementally**: Commit logical units of work with descriptive messages
+3. **Add unit tests**: For every new or meaningfully changed component, util, or store, add Vitest + @testing-library/vue tests (see [Testing Requirements](#testing-requirements))
+4. **Add E2E tests when needed**: If the feature introduces or changes a core user flow (e.g. new page, new journey, critical path), add Playwright E2E tests in `e2e/`
+5. **Update todos**: Mark completed tasks, move to next
+6. **Continue iteratively**: Work through deliverables systematically
+7. **Commit incrementally**: Commit logical units of work with descriptive messages
 
-### Step 8: Commit and Push Changes
+### Step 6: Commit Changes
 
 After completing implementation:
 
@@ -210,7 +142,7 @@ After completing implementation:
 
 3. **Commit with descriptive message**:
    ```bash
-   git commit -m "feat: implement dark mode toggle [MA-1]
+   git commit -m "feat: implement dark mode toggle [MA]
 
    - Add theme state management with Pinia store
    - Create theme toggle component
@@ -221,110 +153,8 @@ After completing implementation:
    ```
    - Use conventional commit format: `feat:`, `fix:`, `refactor:`, etc.
    - Reference issue number: `Closes #42` or `Fixes #42`
-   - Include project identifier if applicable: `[MA-1]`
+   - Include project identifier if applicable: `[MA]`
 
-4. **Push branch to remote**:
-   ```bash
-   git push -u origin issue-42-dark-mode-toggle
-   ```
-   - Use `-u` to set upstream tracking
-   - **Request required permissions**: Use `required_permissions: ['network', 'git_write']` for push operations
-   - Handle push failures (e.g., authentication, permissions)
-
-5. **Handle Git authentication issues**:
-   - If push fails with "could not read Username" or authentication errors:
-     - **First attempt**: Ensure `required_permissions: ['network', 'git_write']` are set in the tool call
-     - The push may succeed with proper permissions even if initial attempt failed
-     - Check if user has credentials cached (macOS Keychain, Git Credential Manager, etc.)
-   - If HTTPS authentication fails persistently:
-     - Check remote URL: `git remote -v`
-     - User may need to configure Git credentials or use SSH
-     - Provide manual push instructions if automated push fails
-   - If push succeeds, continue to PR creation step
-   - If push fails after retry with permissions, inform user and provide:
-     - Manual push command: `git push -u origin <branch-name>`
-     - PR creation URL: `https://github.com/{owner}/{repo}/pull/new/{branch-name}`
-
-### Step 9: Create Pull Request
-
-After pushing the branch, create a PR:
-
-1. **Prepare PR details**:
-   - **Title**: Use issue title or descriptive summary
-     - Example: `Add dark mode toggle [MA-1]` or `feat: Add dark mode toggle`
-   - **Description**: Include:
-     - Summary of changes
-     - Reference to issue: `Closes #42` or `Fixes #42`
-     - Project identifier: `[MA-1]`
-     - Implementation breakdown (can reference the comment)
-     - Testing notes
-     - Screenshots (if UI changes)
-
-2. **Check for authentication token**:
-   - Before making API calls, verify token is available (see Step 3.2 above)
-
-3. **Create PR via GitHub API**:
-   - **Request network permissions** for API calls (use `required_permissions: ['network']` in tool calls)
-   - **Check token availability first**: Only attempt API call if `GITHUB_TOKEN` is set or GitHub CLI is authenticated
-   - Use POST: `https://api.github.com/repos/{owner}/{repo}/pulls`
-   - Body: `{"title": "...", "body": "...", "head": "...", "base": "main"}`
-   - Headers: `-H "Authorization: token $GITHUB_TOKEN"` (if token available)
-   - **Alternative**: Use GitHub CLI if available: `gh pr create --title "..." --body "..." --base main --head {branch-name}`
-   
-   Example API call (with token check):
-   ```bash
-   if [ -n "$GITHUB_TOKEN" ]; then
-     curl -X POST \
-       -H "Authorization: token $GITHUB_TOKEN" \
-       -H "Accept: application/vnd.github.v3+json" \
-       "https://api.github.com/repos/{owner}/{repo}/pulls" \
-       -d '{
-         "title": "Add dark mode toggle [MA-1]",
-         "body": "## Summary\n\nImplements dark mode toggle feature...\n\nCloses #42\n\n## Changes\n\n- Add theme state management\n- Create toggle component\n- Apply theme styles\n\n## Testing\n\n- [x] Tested theme switching\n- [x] Verified localStorage persistence",
-         "head": "issue-42-dark-mode-toggle",
-         "base": "main"
-       }'
-   else
-     echo "GITHUB_TOKEN not set, skipping PR creation via API"
-   fi
-   ```
-
-4. **PR body template**:
-   ```markdown
-   ## Summary
-   [Brief description of what this PR does]
-   
-   Closes #[issue_number]
-   [Project identifier if applicable]
-   
-   ## Changes
-   - [Change 1]
-   - [Change 2]
-   - [Change 3]
-   
-   ## Implementation Details
-   [Reference the breakdown comment or add details]
-   
-   ## Testing
-   - [ ] Tested [scenario 1]
-   - [ ] Tested [scenario 2]
-   - [ ] Verified [requirement]
-   
-   ## Screenshots (if applicable)
-   [Add screenshots for UI changes]
-   ```
-
-5. **Link PR to issue**:
-   - Use keywords in PR description: `Closes #42`, `Fixes #42`, `Resolves #42`
-   - GitHub will automatically link and close the issue when PR is merged
-
-6. **Handle PR creation failure**:
-   - If token is not available, skip API call and provide PR URL template
-   - If API fails (401 Bad credentials, 403 Forbidden), provide PR URL template
-   - PR URL template: `https://github.com/{owner}/{repo}/compare/main...{branch-name}`
-   - Direct PR creation URL: `https://github.com/{owner}/{repo}/pull/new/{branch-name}`
-   - User can create PR manually via GitHub UI
-   - Include prepared title and description for easy copy-paste
 
 ## Issue Analysis Guidelines
 
@@ -366,11 +196,35 @@ Identify and order tasks by:
 - Add appropriate comments for complex logic
 - Update related documentation
 
-### Testing
+### Testing Requirements
 
-- Add tests for new functionality
-- Verify edge cases mentioned in issue
-- Test integration points
+**When developing a new feature, always add tests.** Treat testing as part of the implementation, not optional.
+
+1. **Unit / component tests (always)**
+   - Add tests for every new or meaningfully changed:
+     - Vue components (use `src/test/utils.ts` → `renderWithProviders` and Vitest + @testing-library/vue)
+     - Composables, utils, and store logic
+   - Place specs next to the module or in the same area (e.g. `Foo.vue` → `Foo.spec.ts` or `Foo.test.ts`)
+   - Test behavior and user-visible outcomes; avoid testing implementation details
+   - Run with: `npm run test:run`
+
+2. **E2E tests (when the feature has user-facing flows)**
+   - Add E2E tests when the feature:
+     - Adds or changes a **page or main screen**
+     - Introduces a **critical user journey** (e.g. sign-up, checkout, core workflow)
+     - Changes **navigation or routing** in a way users will notice
+   - Put E2E tests in `e2e/` (e.g. `e2e/my-feature.spec.ts`)
+   - Use Playwright; write resilient, deterministic tests (user-visible state, no brittle timeouts)
+   - Run with: `npm run test:e2e` or `npm run test:e2e:ci`
+
+3. **When to skip E2E**
+   - Internal refactors, config-only changes, or fixes with no new UI flow often need only unit tests.
+   - When in doubt, add at least one E2E test for the main happy path of the new or changed flow.
+
+4. **Check before finishing**
+   - `npm run lint` and `npm run typecheck` pass
+   - `npm run test:run` passes and includes tests for the new/changed code
+   - If the feature has a user-facing flow, `npm run test:e2e` (or relevant E2E subset) passes
 
 ### Documentation
 
@@ -380,13 +234,12 @@ Identify and order tasks by:
 
 ## Example Workflow
 
-**User input**: "Implement MA-1" or "Implement issue #42"
+**User input**: "Implement #42" or "Start #42"
 
 **Step 1**: Fetch issue from GitHub
-- If "MA-1" provided, search for issue containing "MA-1" in title/body
-- Found: Issue #42 contains "MA-1" identifier
+- Found: Issue #42 contains "MA" identifier
 ```
-Issue #42: Add dark mode toggle [MA-1]
+Issue #42: Add dark mode toggle [MA]
 Description: Users should be able to switch between light and dark themes...
 Labels: enhancement, frontend
 ```
@@ -404,21 +257,18 @@ Deliverable 2: UI toggle component
 Deliverable 3: Apply theme styles
 - Update CSS variables
 - Ensure all components respect theme
+
+Deliverable 4: Testing
+- Unit tests for theme store and toggle component
+- E2E test: load app, toggle theme, verify class/attribute changes
 ```
 
-**Step 3**: Assign issue to user (or specified assignee)
+**Step 3**: Create branch `issue-42-dark-mode-toggle`
 
-**Step 4**: Post breakdown comment to issue #42
+**Step 4**: Create todos (include unit + E2E testing tasks) and start implementation
 
-**Step 5**: Create branch `issue-42-dark-mode-toggle`
+**Step 5**: Implement features and tests, commit incrementally
 
-**Step 6**: Create todos and start implementation
-
-**Step 7**: Implement features, commit incrementally
-
-**Step 8**: Push branch: `git push -u origin issue-42-dark-mode-toggle`
-
-**Step 9**: Create PR with title "Add dark mode toggle [MA-1]" linking to issue #42
 
 ## Error Handling
 
@@ -432,21 +282,6 @@ If breakdown is unclear:
 - Make reasonable assumptions and note them
 - Proceed with best-effort breakdown
 
-If Git push fails:
-- **Authentication errors** ("could not read Username", "Device not configured"):
-  - Ensure `required_permissions: ['network', 'git_write']` are set
-  - Retry the push command with proper permissions
-  - If still failing, check Git credential configuration
-  - Provide manual push instructions: `git push -u origin <branch-name>`
-  - Provide PR creation URL for manual PR creation
-- **Permission errors**:
-  - Verify user has write access to the repository
-  - Check if branch protection rules require PR creation
-  - Inform user if manual intervention is needed
-- **Network errors**:
-  - Check internet connectivity
-  - Verify GitHub is accessible
-  - Retry after a brief delay
 
 ## Notes
 

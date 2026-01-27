@@ -53,7 +53,7 @@ import { defineEmits, defineProps } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SyncStrategy } from '@/utils/dataSync'
 
-const props = defineProps<{
+defineProps<{
   show: boolean
 }>()
 
@@ -62,7 +62,7 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
-const { t } = useI18n()
+useI18n()
 
 const handleStrategy = (strategy: SyncStrategy): void => {
   emit('strategy', strategy)

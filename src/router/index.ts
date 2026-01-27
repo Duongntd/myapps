@@ -88,7 +88,7 @@ const router = createRouter({
 })
 
 // Authentication guard
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
   
   // Wait for auth to initialize
