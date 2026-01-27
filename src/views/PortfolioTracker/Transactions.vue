@@ -253,9 +253,9 @@ onMounted(async () => {
   if (symbols.length > 0) {
     const { getMultipleStockPrices } = await import('@/utils/stockPrice')
     const prices = await getMultipleStockPrices(symbols)
-    prices.forEach((price, symbol) => {
-      portfolioStore.updateStockPrice(symbol, price)
-    })
+    for (const [symbol, price] of prices) {
+      await portfolioStore.updateStockPrice(symbol, price)
+    }
   }
 })
 
