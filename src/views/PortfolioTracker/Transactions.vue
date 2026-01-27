@@ -50,10 +50,11 @@
 
           <!-- Symbol -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="tx-symbol" class="block text-sm font-medium text-gray-700 mb-2">
               {{ $t('portfolioTracker.symbol') }} <span class="text-red-500">*</span>
             </label>
             <input
+              id="tx-symbol"
               v-model="form.symbol"
               type="text"
               required
@@ -67,10 +68,11 @@
 
           <!-- Quantity -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="tx-quantity" class="block text-sm font-medium text-gray-700 mb-2">
               {{ $t('portfolioTracker.quantity') }} <span class="text-red-500">*</span>
             </label>
             <input
+              id="tx-quantity"
               v-model.number="form.quantity"
               type="number"
               required
@@ -85,10 +87,11 @@
 
           <!-- Price -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="tx-price" class="block text-sm font-medium text-gray-700 mb-2">
               {{ $t('portfolioTracker.pricePerShare') }} <span class="text-red-500">*</span>
             </label>
             <input
+              id="tx-price"
               v-model.number="form.price"
               type="number"
               required
@@ -112,6 +115,50 @@
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+          </div>
+
+          <!-- Source / Broker: select existing or add new -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-700">
+              {{ $t('portfolioTracker.source') }}
+            </label>
+            <template v-if="portfolioStore.distinctSources.length > 0">
+              <select
+                v-model="form.sourceSelect"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900"
+                :aria-label="$t('portfolioTracker.sourceSelectExisting')"
+              >
+                <option value="">
+                  {{ $t('portfolioTracker.sourceAddNew') }}
+                </option>
+                <option
+                  v-for="s in portfolioStore.distinctSources"
+                  :key="s"
+                  :value="s"
+                >
+                  {{ s }}
+                </option>
+              </select>
+              <div v-if="form.sourceSelect === ''" class="pt-1">
+                <label class="sr-only" for="source-new-input">{{ $t('portfolioTracker.sourceNewLabel') }}</label>
+                <input
+                  id="source-new-input"
+                  v-model="form.sourceNew"
+                  type="text"
+                  :placeholder="$t('portfolioTracker.sourcePlaceholder')"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </template>
+            <template v-else>
+              <input
+                v-model="form.sourceNew"
+                type="text"
+                :placeholder="$t('portfolioTracker.sourcePlaceholder')"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                :aria-label="$t('portfolioTracker.source')"
+              />
+            </template>
           </div>
 
           <!-- Error Message -->
@@ -159,12 +206,25 @@
       </div>
 
       <div v-else class="overflow-x-auto">
+        <!-- Filter by source -->
+        <div v-if="portfolioStore.distinctSources.length > 0" class="px-4 py-2 border-b border-gray-200 bg-gray-50 flex items-center gap-2 flex-wrap">
+          <span class="text-sm font-medium text-gray-700">{{ $t('portfolioTracker.filterBySource') }}:</span>
+          <select
+            v-model="sourceFilter"
+            :aria-label="$t('portfolioTracker.filterBySource')"
+            class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            <option value="">{{ $t('portfolioTracker.allSources') }}</option>
+            <option v-for="s in portfolioStore.distinctSources" :key="s" :value="s">{{ s }}</option>
+          </select>
+        </div>
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.date') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.type') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.symbol') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.source') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.quantity') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.price') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.total') }}</th>
@@ -173,7 +233,7 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr
-              v-for="transaction in portfolioStore.transactions"
+              v-for="transaction in filteredTransactions"
               :key="transaction.id"
               class="hover:bg-gray-50"
             >
@@ -190,6 +250,9 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm font-semibold text-gray-900">{{ transaction.symbol }}</span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span class="text-sm text-gray-600">{{ (transaction.source || '').trim() || '—' }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm text-gray-900">{{ transaction.quantity }}</span>
@@ -218,10 +281,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePortfolioStore } from '@/stores/portfolio'
 import { useI18n } from 'vue-i18n'
 import type { Timestamp } from 'firebase/firestore'
+import type { Transaction } from '@/firebase/firestore'
 
 const portfolioStore = usePortfolioStore()
 const { t } = useI18n()
@@ -230,13 +294,22 @@ const showForm = ref(false)
 const submitting = ref(false)
 const deleting = ref(false)
 const submitError = ref('')
+const sourceFilter = ref('')
 
 const form = ref({
   type: 'buy' as 'buy' | 'sell',
   symbol: '',
   quantity: 0,
   price: 0,
-  date: new Date().toISOString().split('T')[0]
+  date: new Date().toISOString().split('T')[0],
+  sourceSelect: '' as string,
+  sourceNew: ''
+})
+
+const filteredTransactions = computed<Transaction[]>(() => {
+  const list = portfolioStore.transactions
+  if (!sourceFilter.value) return list
+  return list.filter(tx => (tx.source ?? '').trim() === sourceFilter.value)
 })
 
 const errors = ref({
@@ -276,7 +349,9 @@ const closeForm = () => {
     symbol: '',
     quantity: 0,
     price: 0,
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    sourceSelect: '',
+    sourceNew: ''
   }
   errors.value = { symbol: '', quantity: '', price: '' }
   submitError.value = ''
@@ -316,12 +391,14 @@ const handleSubmit = async () => {
       nanoseconds: 0
     } as Timestamp
 
+    const effectiveSource = (form.value.sourceSelect || form.value.sourceNew.trim()).trim()
     await portfolioStore.createTransaction({
       type: form.value.type,
       symbol: form.value.symbol.toUpperCase(),
       quantity: form.value.quantity,
       price: form.value.price,
-      date: timestamp
+      date: timestamp,
+      ...(effectiveSource ? { source: effectiveSource } : {})
     })
 
     closeForm()
