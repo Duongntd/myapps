@@ -114,25 +114,48 @@
             />
           </div>
 
-          <!-- Source / Broker -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+          <!-- Source / Broker: select existing or add new -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-700">
               {{ $t('portfolioTracker.source') }}
             </label>
-            <input
-              v-model="form.source"
-              type="text"
-              :placeholder="$t('portfolioTracker.sourcePlaceholder')"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              list="source-list"
-            />
-            <datalist id="source-list" :key="portfolioStore.distinctSources.length">
-              <option
-                v-for="s in portfolioStore.distinctSources"
-                :key="s"
-                :value="s"
+            <template v-if="portfolioStore.distinctSources.length > 0">
+              <select
+                v-model="form.sourceSelect"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900"
+                :aria-label="$t('portfolioTracker.sourceSelectExisting')"
+              >
+                <option value="">
+                  {{ $t('portfolioTracker.sourceAddNew') }}
+                </option>
+                <option
+                  v-for="s in portfolioStore.distinctSources"
+                  :key="s"
+                  :value="s"
+                >
+                  {{ s }}
+                </option>
+              </select>
+              <div v-if="form.sourceSelect === ''" class="pt-1">
+                <label class="sr-only" for="source-new-input">{{ $t('portfolioTracker.sourceNewLabel') }}</label>
+                <input
+                  id="source-new-input"
+                  v-model="form.sourceNew"
+                  type="text"
+                  :placeholder="$t('portfolioTracker.sourcePlaceholder')"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </template>
+            <template v-else>
+              <input
+                v-model="form.sourceNew"
+                type="text"
+                :placeholder="$t('portfolioTracker.sourcePlaceholder')"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                :aria-label="$t('portfolioTracker.source')"
               />
-            </datalist>
+            </template>
           </div>
 
           <!-- Error Message -->
@@ -276,7 +299,8 @@ const form = ref({
   quantity: 0,
   price: 0,
   date: new Date().toISOString().split('T')[0],
-  source: ''
+  sourceSelect: '' as string,
+  sourceNew: ''
 })
 
 const filteredTransactions = computed<Transaction[]>(() => {
@@ -323,7 +347,8 @@ const closeForm = () => {
     quantity: 0,
     price: 0,
     date: new Date().toISOString().split('T')[0],
-    source: ''
+    sourceSelect: '',
+    sourceNew: ''
   }
   errors.value = { symbol: '', quantity: '', price: '' }
   submitError.value = ''
@@ -363,13 +388,14 @@ const handleSubmit = async () => {
       nanoseconds: 0
     } as Timestamp
 
+    const effectiveSource = (form.value.sourceSelect || form.value.sourceNew.trim()).trim()
     await portfolioStore.createTransaction({
       type: form.value.type,
       symbol: form.value.symbol.toUpperCase(),
       quantity: form.value.quantity,
       price: form.value.price,
       date: timestamp,
-      ...(form.value.source.trim() ? { source: form.value.source.trim() } : {})
+      ...(effectiveSource ? { source: effectiveSource } : {})
     })
 
     closeForm()
