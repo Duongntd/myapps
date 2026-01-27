@@ -76,11 +76,23 @@
     <!-- Holdings Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
       <div class="p-4 sm:p-6 border-b border-gray-200">
-        <div class="flex justify-between items-center mb-2">
+        <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
           <h2 class="text-lg sm:text-xl font-semibold text-gray-900">{{ $t('portfolioTracker.myHoldings') }}</h2>
-          <div class="text-sm text-gray-600">
-            <span class="font-medium">{{ $t('portfolioTracker.totalCash') }}:</span>
-            <span class="ml-1 font-semibold text-gray-900">{{ formatCurrency(portfolioStore.totalCash) }}</span>
+          <div class="flex items-center gap-4 flex-wrap">
+            <div v-if="distinctHoldingSources.length > 0" class="flex items-center gap-2">
+              <span class="text-sm font-medium text-gray-700">{{ $t('portfolioTracker.filterBySource') }}:</span>
+              <select
+                v-model="sourceFilter"
+                class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">{{ $t('portfolioTracker.allSources') }}</option>
+                <option v-for="s in distinctHoldingSources" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="text-sm text-gray-600">
+              <span class="font-medium">{{ $t('portfolioTracker.totalCash') }}:</span>
+              <span class="ml-1 font-semibold text-gray-900">{{ formatCurrency(portfolioStore.totalCash) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -105,6 +117,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.symbol') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.source') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.quantity') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.averagePrice') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.currentPrice') }}</th>
@@ -114,12 +127,15 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr
-              v-for="holding in portfolioStore.holdingsWithPrices"
+              v-for="holding in filteredHoldings"
               :key="holding.id"
               class="hover:bg-gray-50"
             >
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm font-semibold text-gray-900">{{ holding.symbol }}</span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span class="text-sm text-gray-600">{{ (holding.source || '').trim() || '—' }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm text-gray-900">{{ holding.quantity }}</span>
@@ -196,6 +212,20 @@ useI18n()
 const refreshing = ref(false)
 const editingPrice = ref<string | null>(null)
 const editPriceValue = ref<number>(0)
+const sourceFilter = ref('')
+
+const distinctHoldingSources = computed(() => {
+  const set = new Set(
+    portfolioStore.holdings.map(h => (h.source ?? '').trim()).filter(Boolean)
+  )
+  return [...set].sort()
+})
+
+const filteredHoldings = computed(() => {
+  const list = portfolioStore.holdingsWithPrices
+  if (!sourceFilter.value) return list
+  return list.filter(h => (h.source ?? '').trim() === sourceFilter.value)
+})
 
 onMounted(async () => {
   await portfolioStore.fetchHoldings()

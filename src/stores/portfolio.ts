@@ -130,6 +130,14 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return totalPortfolioValue.value > 0 ? (totalStockValue.value / totalPortfolioValue.value) * 100 : 0
   })
 
+  // Distinct broker/source names from transactions (for filter dropdown)
+  const distinctSources = computed<string[]>(() => {
+    const set = new Set(
+      transactions.value.map(t => (t.source ?? '').trim()).filter(Boolean)
+    )
+    return [...set].sort()
+  })
+
   const fetchHoldings = async (): Promise<void> => {
     const authStore = useAuthStore()
     if (!authStore.isAuthenticated) return
@@ -212,12 +220,17 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     }
   }
 
+  const sourceOf = (t: Transaction | Omit<Transaction, 'id' | 'createdAt'>) => (t.source ?? '').trim()
+
   const processTransaction = async (transactionData: Omit<Transaction, 'id' | 'createdAt'>): Promise<void> => {
     const authStore = useAuthStore()
     if (!authStore.isAuthenticated) throw new Error('User not authenticated')
 
     const symbol = transactionData.symbol.toUpperCase()
-    const existingHolding = holdings.value.find(h => h.symbol.toUpperCase() === symbol)
+    const source = sourceOf(transactionData)
+    const existingHolding = holdings.value.find(
+      h => h.symbol.toUpperCase() === symbol && (h.source ?? '').trim() === source
+    )
 
     if (transactionData.type === 'buy') {
       if (existingHolding) {
@@ -243,7 +256,8 @@ export const usePortfolioStore = defineStore('portfolio', () => {
           symbol: symbol,
           quantity: transactionData.quantity,
           averagePrice: transactionData.price,
-          currentPrice: transactionData.price
+          currentPrice: transactionData.price,
+          ...(source ? { source } : {})
         }
 
         if (authStore.localMode) {
@@ -254,7 +268,7 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       }
     } else if (transactionData.type === 'sell') {
       if (!existingHolding) {
-        throw new Error(`Cannot sell ${symbol}: No holdings found`)
+        throw new Error(`Cannot sell ${symbol}: No holdings found${source ? ` for source "${source}"` : ''}`)
       }
       if (existingHolding.quantity < transactionData.quantity) {
         throw new Error(`Cannot sell ${transactionData.quantity} shares: Only ${existingHolding.quantity} shares owned`)
@@ -327,38 +341,39 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       }
     }
 
-    // Rebuild holdings from transactions
+    // Rebuild holdings from transactions, keyed by (symbol, source)
     const holdingsMap = new Map<string, { quantity: number; totalCost: number }>()
-    
     for (const transaction of remainingTransactions) {
       const symbol = transaction.symbol.toUpperCase()
-      const existing = holdingsMap.get(symbol) || { quantity: 0, totalCost: 0 }
+      const source = sourceOf(transaction)
+      const key = `${symbol}|${source}`
+      const existing = holdingsMap.get(key) || { quantity: 0, totalCost: 0 }
 
       if (transaction.type === 'buy') {
         existing.quantity += transaction.quantity
         existing.totalCost += transaction.price * transaction.quantity
       } else {
         existing.quantity -= transaction.quantity
-        // For sells, we reduce cost proportionally
         const avgPrice = existing.totalCost / (existing.quantity + transaction.quantity)
         existing.totalCost -= avgPrice * transaction.quantity
       }
 
       if (existing.quantity > 0) {
-        holdingsMap.set(symbol, existing)
+        holdingsMap.set(key, existing)
       } else {
-        holdingsMap.delete(symbol)
+        holdingsMap.delete(key)
       }
     }
 
     // Create holdings from map
-    for (const [symbol, data] of holdingsMap.entries()) {
+    for (const [key, data] of holdingsMap.entries()) {
+      const [symbol, source] = key.includes('|') ? key.split('|') : [key, '']
       const newHolding: Omit<StockHolding, 'id' | 'createdAt' | 'updatedAt'> = {
         symbol,
         quantity: data.quantity,
-        averagePrice: data.totalCost / data.quantity
+        averagePrice: data.totalCost / data.quantity,
+        ...(source ? { source } : {})
       }
-
       if (authStore.localMode) {
         await addHoldingLocal(newHolding)
       } else if (authStore.user) {
@@ -375,16 +390,16 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       price,
       lastUpdated: new Date()
     })
-    // Persist manual current price to holding (manual tracking per #40)
-    const holding = holdings.value.find(h => h.symbol.toUpperCase() === upperSymbol)
-    if (holding?.id) {
+    // Persist manual current price to all holdings with this symbol (manual tracking per #40)
+    const matchingHoldings = holdings.value.filter(h => h.symbol.toUpperCase() === upperSymbol)
+    for (const holding of matchingHoldings) {
+      if (!holding.id) continue
       try {
         if (authStore.localMode) {
           await updateHoldingLocal(holding.id, { currentPrice: price })
         } else if (authStore.user) {
           await updateHoldingFirebase(authStore.user.uid, holding.id, { currentPrice: price })
         }
-        // Update local state so holding.currentPrice stays in sync
         const idx = holdings.value.findIndex(h => h.id === holding.id)
         if (idx !== -1) {
           holdings.value = [
@@ -482,6 +497,7 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     totalCostBasis,
     totalNAV,
     totalNAVPercent,
+    distinctSources,
     fetchHoldings,
     fetchTransactions,
     fetchAccount,

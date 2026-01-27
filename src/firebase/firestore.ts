@@ -54,6 +54,8 @@ export interface StockHolding {
   quantity: number
   averagePrice: number // Average purchase price per share (weighted average of buys)
   currentPrice?: number // Manual/last-known price per share; default is last buy price
+  /** Broker/source where the holding was bought (e.g. Trading 212, Interactive Broker). Empty = legacy/unset. */
+  source?: string
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
@@ -65,6 +67,8 @@ export interface Transaction {
   quantity: number
   price: number // Price per share at transaction time
   date: Timestamp
+  /** Broker/source where the transaction was made (e.g. Trading 212, Interactive Broker). Empty = legacy/unset. */
+  source?: string
   createdAt?: Timestamp
 }
 

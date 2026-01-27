@@ -114,6 +114,27 @@
             />
           </div>
 
+          <!-- Source / Broker -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              {{ $t('portfolioTracker.source') }}
+            </label>
+            <input
+              v-model="form.source"
+              type="text"
+              :placeholder="$t('portfolioTracker.sourcePlaceholder')"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              list="source-list"
+            />
+            <datalist id="source-list" :key="portfolioStore.distinctSources.length">
+              <option
+                v-for="s in portfolioStore.distinctSources"
+                :key="s"
+                :value="s"
+              />
+            </datalist>
+          </div>
+
           <!-- Error Message -->
           <div v-if="submitError" class="bg-red-50 border border-red-200 rounded-lg p-3">
             <p class="text-sm text-red-600">{{ submitError }}</p>
@@ -159,12 +180,25 @@
       </div>
 
       <div v-else class="overflow-x-auto">
+        <!-- Filter by source -->
+        <div v-if="portfolioStore.distinctSources.length > 0" class="px-4 py-2 border-b border-gray-200 bg-gray-50 flex items-center gap-2 flex-wrap">
+          <span class="text-sm font-medium text-gray-700">{{ $t('portfolioTracker.filterBySource') }}:</span>
+          <select
+            v-model="sourceFilter"
+            :aria-label="$t('portfolioTracker.filterBySource')"
+            class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            <option value="">{{ $t('portfolioTracker.allSources') }}</option>
+            <option v-for="s in portfolioStore.distinctSources" :key="s" :value="s">{{ s }}</option>
+          </select>
+        </div>
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.date') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.type') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.symbol') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.source') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.quantity') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.price') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.total') }}</th>
@@ -173,7 +207,7 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr
-              v-for="transaction in portfolioStore.transactions"
+              v-for="transaction in filteredTransactions"
               :key="transaction.id"
               class="hover:bg-gray-50"
             >
@@ -190,6 +224,9 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm font-semibold text-gray-900">{{ transaction.symbol }}</span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span class="text-sm text-gray-600">{{ (transaction.source || '').trim() || '—' }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm text-gray-900">{{ transaction.quantity }}</span>
@@ -218,10 +255,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePortfolioStore } from '@/stores/portfolio'
 import { useI18n } from 'vue-i18n'
 import type { Timestamp } from 'firebase/firestore'
+import type { Transaction } from '@/firebase/firestore'
 
 const portfolioStore = usePortfolioStore()
 const { t } = useI18n()
@@ -230,13 +268,21 @@ const showForm = ref(false)
 const submitting = ref(false)
 const deleting = ref(false)
 const submitError = ref('')
+const sourceFilter = ref('')
 
 const form = ref({
   type: 'buy' as 'buy' | 'sell',
   symbol: '',
   quantity: 0,
   price: 0,
-  date: new Date().toISOString().split('T')[0]
+  date: new Date().toISOString().split('T')[0],
+  source: ''
+})
+
+const filteredTransactions = computed<Transaction[]>(() => {
+  const list = portfolioStore.transactions
+  if (!sourceFilter.value) return list
+  return list.filter(tx => (tx.source ?? '').trim() === sourceFilter.value)
 })
 
 const errors = ref({
@@ -276,7 +322,8 @@ const closeForm = () => {
     symbol: '',
     quantity: 0,
     price: 0,
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    source: ''
   }
   errors.value = { symbol: '', quantity: '', price: '' }
   submitError.value = ''
@@ -321,7 +368,8 @@ const handleSubmit = async () => {
       symbol: form.value.symbol.toUpperCase(),
       quantity: form.value.quantity,
       price: form.value.price,
-      date: timestamp
+      date: timestamp,
+      ...(form.value.source.trim() ? { source: form.value.source.trim() } : {})
     })
 
     closeForm()

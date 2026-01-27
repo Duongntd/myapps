@@ -121,3 +121,59 @@ describe('portfolio store – manual current price (#40)', () => {
     // (10*200 + 10*100)/(10+10) = 150
   })
 })
+
+describe('portfolio store – stock source (#31)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetPortfolioAccount.mockResolvedValue({ totalInvested: 0, cash: 0 })
+    setActivePinia(createPinia())
+  })
+
+  it('distinctSources returns sorted unique sources from transactions', async () => {
+    const transactions: Transaction[] = [
+      { id: 't1', type: 'buy', symbol: 'AAPL', quantity: 10, price: 150, date: { seconds: 1000 } as Transaction['date'], source: 'Trading 212' },
+      { id: 't2', type: 'buy', symbol: 'MSFT', quantity: 5, price: 300, date: { seconds: 2000 } as Transaction['date'], source: 'Interactive Broker' },
+      { id: 't3', type: 'buy', symbol: 'GOOG', quantity: 2, price: 140, date: { seconds: 3000 } as Transaction['date'], source: 'Trading 212' }
+    ]
+    mockGetStockHoldings.mockResolvedValue([])
+    mockGetTransactions.mockResolvedValue(transactions)
+
+    const store = usePortfolioStore()
+    await store.fetchHoldings()
+    await store.fetchTransactions()
+
+    expect(store.distinctSources).toEqual(['Interactive Broker', 'Trading 212'])
+  })
+
+  it('distinctSources returns empty when no transactions have source', async () => {
+    mockGetStockHoldings.mockResolvedValue([])
+    mockGetTransactions.mockResolvedValue([
+      { id: 't1', type: 'buy', symbol: 'AAPL', quantity: 10, price: 150, date: { seconds: 1000 } as Transaction['date'] }
+    ])
+
+    const store = usePortfolioStore()
+    await store.fetchHoldings()
+    await store.fetchTransactions()
+
+    expect(store.distinctSources).toEqual([])
+  })
+
+  it('holdingsWithPrices includes source when holdings have source', async () => {
+    const holdings: StockHolding[] = [
+      { id: 'h1', symbol: 'AAPL', quantity: 10, averagePrice: 150, source: 'Trading 212' },
+      { id: 'h2', symbol: 'AAPL', quantity: 5, averagePrice: 160, source: 'Interactive Broker' }
+    ]
+    mockGetStockHoldings.mockResolvedValue(holdings)
+    mockGetTransactions.mockResolvedValue([])
+
+    const store = usePortfolioStore()
+    await store.fetchHoldings()
+    await store.fetchTransactions()
+
+    const withPrices = store.holdingsWithPrices
+    expect(withPrices).toHaveLength(2)
+    expect(withPrices.map(h => ({ symbol: h.symbol, source: h.source }))).toEqual(
+      [{ symbol: 'AAPL', source: 'Trading 212' }, { symbol: 'AAPL', source: 'Interactive Broker' }]
+    )
+  })
+})
