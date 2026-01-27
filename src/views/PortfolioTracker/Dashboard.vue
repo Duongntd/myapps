@@ -106,6 +106,7 @@
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.symbol') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.quantity') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.averagePrice') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.currentPrice') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.currentValue') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.navPercent') }}</th>
@@ -122,6 +123,9 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm text-gray-900">{{ holding.quantity }}</span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span class="text-sm text-gray-900">{{ formatCurrency(holding.averagePrice) }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <div v-if="editingPrice === holding.id" class="flex items-center gap-2">
