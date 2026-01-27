@@ -270,7 +270,6 @@ const handlePromptCancel = () => {
 
 // Calculate today's total reading time
 const todayTotalMinutes = computed(() => {
-  const today = new Date()
   return sessionsStore.sessions
     .filter(session => {
       if (!session.date) return false

@@ -92,7 +92,7 @@ const createChart = () => {
         tooltip: {
           callbacks: {
             label: (context) => {
-              const minutes = context.parsed.y
+              const minutes = context.parsed.y ?? 0
               if (minutes === 0) return 'No reading'
               if (minutes < 60) {
                 return `${minutes}m`

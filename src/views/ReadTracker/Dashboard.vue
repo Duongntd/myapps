@@ -194,7 +194,6 @@ import {
   startOfMonth,
   startOfYear,
   eachDayOfInterval,
-  isSameDay,
   format as formatDate,
   getWeek,
   getYear
@@ -434,7 +433,7 @@ const wantToReadBooksCount = computed(() => {
 const chartData = computed(() => {
   const now = new Date()
   let startDate: Date
-  let endDate = now
+  const endDate = now
   
   if (chartPeriod.value === 'week') {
     startDate = startOfWeek(now)
@@ -503,7 +502,6 @@ const activeGoals = computed(() => {
 // Calculate goal progress
 const goalProgress = (goal: Goal) => {
   let currentMinutes = 0
-  const now = new Date()
 
   if (goal.type === 'daily') {
     currentMinutes = sessionsStore.sessions
