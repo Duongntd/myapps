@@ -10,12 +10,12 @@ description: Fetches GitHub issues by issue number or project identifier (e.g., 
 This skill automates the workflow of:
 1. Fetching a GitHub issue by issue number or project identifier (e.g., MA-1)
 2. Analyzing the issue content and requirements
-3. Breaking it down into actionable deliverables
+3. Breaking it down into actionable deliverables (including testing tasks)
 4. Assigning the issue to the user or agent
 5. Updating the issue with the breakdown as a comment
 6. Creating a feature branch
 7. Creating a structured task list
-8. Implementing the solution
+8. Implementing the solution **and tests** (unit tests always; E2E when the feature has user-facing flows)
 9. Committing and pushing changes
 10. Creating a pull request
 
@@ -74,7 +74,13 @@ Deliverable 1: [Specific task]
 
 Deliverable 2: [Specific task]
 - Subtask 2.1: [Actionable item]
+
+Deliverable N: Testing (always include when adding features)
+- Add unit tests for [new/changed components, utils, stores]
+- Add E2E tests for [user-facing flows] (if the feature has navigable UI or critical paths)
 ```
+
+When the issue adds or changes user-facing behavior or logic, always include a **Testing** deliverable: unit tests for new/changed code, and E2E tests when the feature has pages, flows, or critical user journeys.
 
 
 ### Step 3: Create Feature Branch
@@ -104,7 +110,7 @@ Use `todo_write` to create a structured task list:
 
 - Group related tasks under logical deliverables
 - Mark dependencies clearly (e.g., "pending" until prerequisite completes)
-- Include verification/testing tasks
+- **Always include testing tasks**: unit tests for new/modified logic, and E2E tests when the feature has user-facing flows (see [Testing Requirements](#testing-requirements) below)
 - Set first task to "in_progress"
 
 ### Step 5: Start Implementation
@@ -113,9 +119,11 @@ Begin with the first task:
 
 1. **Read relevant files**: Understand current codebase structure
 2. **Make changes**: Implement the feature following project conventions
-3. **Update todos**: Mark completed tasks, move to next
-4. **Continue iteratively**: Work through deliverables systematically
-5. **Commit incrementally**: Commit logical units of work with descriptive messages
+3. **Add unit tests**: For every new or meaningfully changed component, util, or store, add Vitest + @testing-library/vue tests (see [Testing Requirements](#testing-requirements))
+4. **Add E2E tests when needed**: If the feature introduces or changes a core user flow (e.g. new page, new journey, critical path), add Playwright E2E tests in `e2e/`
+5. **Update todos**: Mark completed tasks, move to next
+6. **Continue iteratively**: Work through deliverables systematically
+7. **Commit incrementally**: Commit logical units of work with descriptive messages
 
 ### Step 6: Commit Changes
 
@@ -188,11 +196,35 @@ Identify and order tasks by:
 - Add appropriate comments for complex logic
 - Update related documentation
 
-### Testing
+### Testing Requirements
 
-- Add tests for new functionality
-- Verify edge cases mentioned in issue
-- Test integration points
+**When developing a new feature, always add tests.** Treat testing as part of the implementation, not optional.
+
+1. **Unit / component tests (always)**
+   - Add tests for every new or meaningfully changed:
+     - Vue components (use `src/test/utils.ts` → `renderWithProviders` and Vitest + @testing-library/vue)
+     - Composables, utils, and store logic
+   - Place specs next to the module or in the same area (e.g. `Foo.vue` → `Foo.spec.ts` or `Foo.test.ts`)
+   - Test behavior and user-visible outcomes; avoid testing implementation details
+   - Run with: `npm run test:run`
+
+2. **E2E tests (when the feature has user-facing flows)**
+   - Add E2E tests when the feature:
+     - Adds or changes a **page or main screen**
+     - Introduces a **critical user journey** (e.g. sign-up, checkout, core workflow)
+     - Changes **navigation or routing** in a way users will notice
+   - Put E2E tests in `e2e/` (e.g. `e2e/my-feature.spec.ts`)
+   - Use Playwright; write resilient, deterministic tests (user-visible state, no brittle timeouts)
+   - Run with: `npm run test:e2e` or `npm run test:e2e:ci`
+
+3. **When to skip E2E**
+   - Internal refactors, config-only changes, or fixes with no new UI flow often need only unit tests.
+   - When in doubt, add at least one E2E test for the main happy path of the new or changed flow.
+
+4. **Check before finishing**
+   - `npm run lint` and `npm run typecheck` pass
+   - `npm run test:run` passes and includes tests for the new/changed code
+   - If the feature has a user-facing flow, `npm run test:e2e` (or relevant E2E subset) passes
 
 ### Documentation
 
@@ -225,13 +257,17 @@ Deliverable 2: UI toggle component
 Deliverable 3: Apply theme styles
 - Update CSS variables
 - Ensure all components respect theme
+
+Deliverable 4: Testing
+- Unit tests for theme store and toggle component
+- E2E test: load app, toggle theme, verify class/attribute changes
 ```
 
 **Step 3**: Create branch `issue-42-dark-mode-toggle`
 
-**Step 4**: Create todos and start implementation
+**Step 4**: Create todos (include unit + E2E testing tasks) and start implementation
 
-**Step 5**: Implement features, commit incrementally
+**Step 5**: Implement features and tests, commit incrementally
 
 
 ## Error Handling
