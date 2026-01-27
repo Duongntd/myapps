@@ -9,19 +9,13 @@ test.describe('Portfolio Tracker functionality', () => {
   test('Dashboard: shows portfolio dashboard and holdings section', async ({ page }) => {
     await page.goto('/portfolio-tracker/dashboard')
     await expect(page.getByText(/Manage your stock portfolio/)).toBeVisible()
-    await expect(
-      page.getByText(/Total Value|My Holdings|No holdings|Add First Transaction|Refresh/i)
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'My Holdings' })).toBeVisible()
   })
 
   test('Transactions: shows title, Add Transaction, and list or empty state', async ({ page }) => {
     await page.goto('/portfolio-tracker/transactions')
-    await expect(page.getByText(/Add Transaction|transactions/i)).toBeVisible()
-    await expect(
-      page.getByRole('button', { name: /add transaction/i })
-    ).toBeVisible()
-    await expect(
-      page.getByText(/No transactions|Transaction Type|Buy|Sell/i)
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Transactions' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /add transaction/i })).toBeVisible()
+    await expect(page.getByText(/No transactions|Transaction Type|Buy|Sell/i).first()).toBeVisible()
   })
 })

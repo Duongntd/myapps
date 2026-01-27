@@ -57,7 +57,7 @@ test.describe('Navigation between views', () => {
 
     await page.getByRole('link', { name: /transactions/i }).click()
     await expect(page).toHaveURL(/\/portfolio-tracker\/transactions/)
-    await expect(page.getByText(/Add Transaction|transactions/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Transactions' })).toBeVisible()
   })
 
   test('can go back to home from Read Tracker via header', async ({ page }) => {
