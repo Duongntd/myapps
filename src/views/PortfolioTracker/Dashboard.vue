@@ -118,6 +118,7 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.averagePrice') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.currentPrice') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.currentValue') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.stockPerformance') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.navPercent') }}</th>
             </tr>
           </thead>
@@ -186,11 +187,24 @@
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span
-                  v-if="holding.id === 'cash' || holding.currentPrice > 0"
+                  v-if="holding.id === 'cash'"
+                  class="text-sm text-gray-500"
+                >—</span>
+                <span
+                  v-else-if="holding.stockPerformancePercent != null"
                   class="text-sm font-medium"
-                  :class="holding.navPercent >= 0 ? 'text-green-600' : 'text-red-600'"
+                  :class="holding.stockPerformancePercent >= 0 ? 'text-green-600' : 'text-red-600'"
                 >
-                  {{ formatPercent(holding.navPercent) }}
+                  {{ formatStockPerformance(holding.stockPerformancePercent) }}
+                </span>
+                <span v-else class="text-sm text-gray-400">-</span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span
+                  v-if="holding.id === 'cash' || holding.currentPrice > 0"
+                  class="text-sm font-medium text-purple-600"
+                >
+                  {{ formatNavPercent(holding.navPercent) }}
                 </span>
                 <span v-else class="text-sm text-gray-400">-</span>
               </td>
@@ -239,7 +253,8 @@ const filteredHoldings = computed(() => {
     averagePrice: 0,
     currentPrice: 0,
     currentValue: cash,
-    navPercent: total > 0 ? (cash / total) * 100 : 0
+    navPercent: total > 0 ? (cash / total) * 100 : 0,
+    stockPerformancePercent: null as number | null
   }
   return [cashRow, ...filtered]
 })
@@ -298,6 +313,16 @@ const formatCurrency = (value: number): string => {
 
 const formatPercent = (value: number): string => {
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+// Stock performance: +X.XX% (green) or -X.XX% (red)
+const formatStockPerformance = (value: number): string => {
+  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+// NAV%: X.XX% only, no + sign (allocation percentage)
+const formatNavPercent = (value: number): string => {
+  return `${value.toFixed(2)}%`
 }
 
 // Performance = (total portfolio value / total invested) - 1 (in percentage)

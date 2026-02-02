@@ -6,19 +6,47 @@ const mockFetchHoldings = vi.fn()
 const mockFetchTransactions = vi.fn()
 const mockFetchAccount = vi.fn()
 
+const defaultMockStore = {
+  holdings: [] as { id?: string; symbol: string; source?: string }[],
+  holdingsWithPrices: [] as { id?: string; symbol: string; navPercent: number; stockPerformancePercent: number | null }[],
+  totalCash: 5000,
+  totalPortfolioValue: 5000,
+  totalInvested: 0,
+  loading: false,
+  fetchHoldings: mockFetchHoldings,
+  fetchTransactions: mockFetchTransactions,
+  fetchAccount: mockFetchAccount,
+  updateStockPrice: vi.fn()
+}
+
+const mockStoreWithHoldings = {
+  holdings: [{ id: 'h1', symbol: 'AAPL', source: '' }],
+  holdingsWithPrices: [
+    {
+      id: 'h1',
+      symbol: 'AAPL',
+      source: '',
+      quantity: 10,
+      averagePrice: 150,
+      currentPrice: 165,
+      currentValue: 1650,
+      navPercent: 25,
+      stockPerformancePercent: 10
+    }
+  ],
+  totalCash: 0,
+  totalPortfolioValue: 6600,
+  totalInvested: 5000,
+  loading: false,
+  fetchHoldings: mockFetchHoldings,
+  fetchTransactions: mockFetchTransactions,
+  fetchAccount: mockFetchAccount,
+  updateStockPrice: vi.fn()
+}
+
+let portfolioStoreMock = defaultMockStore
 vi.mock('@/stores/portfolio', () => ({
-  usePortfolioStore: () => ({
-    holdings: [],
-    holdingsWithPrices: [],
-    totalCash: 5000,
-    totalPortfolioValue: 5000,
-    totalInvested: 0,
-    loading: false,
-    fetchHoldings: mockFetchHoldings,
-    fetchTransactions: mockFetchTransactions,
-    fetchAccount: mockFetchAccount,
-    updateStockPrice: vi.fn()
-  })
+  usePortfolioStore: () => portfolioStoreMock
 }))
 
 vi.mock('@/utils/stockPrice', () => ({
@@ -28,6 +56,7 @@ vi.mock('@/utils/stockPrice', () => ({
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    portfolioStoreMock = defaultMockStore
   })
 
   it('shows My Holdings section', async () => {
@@ -40,5 +69,23 @@ describe('Dashboard', () => {
     const { findByText } = renderWithProviders(Dashboard)
     const cashCell = await findByText('CASH')
     expect(cashCell).toBeDefined()
+  })
+
+  it('displays stock performance column with + for gain and green color (#46)', async () => {
+    portfolioStoreMock = mockStoreWithHoldings
+    const { findByText } = renderWithProviders(Dashboard)
+    // Performance column shows +10.00% for 10% gain
+    const perfCell = await findByText('+10.00%')
+    expect(perfCell).toBeDefined()
+    expect(perfCell.className).toContain('text-green-600')
+  })
+
+  it('displays NAV% without + sign and in purple (#46)', async () => {
+    portfolioStoreMock = mockStoreWithHoldings
+    const { findByText } = renderWithProviders(Dashboard)
+    // NAV% shows 25.00% (no + sign)
+    const navCell = await findByText('25.00%')
+    expect(navCell).toBeDefined()
+    expect(navCell.className).toContain('text-purple-600')
   })
 })

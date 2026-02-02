@@ -105,14 +105,22 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return totalCash.value + totalStockValue.value
   })
 
-  // Computed: Holdings with NAV% calculated (needs portfolio value)
+  // Computed: Holdings with NAV% and stock performance calculated (needs portfolio value)
   const holdingsWithNAVPercent = computed(() => {
     const portfolioValue = totalPortfolioValue.value
-    return holdingsWithPrices.value.map(holding => ({
-      ...holding,
-      // NAV% = (stock value / total portfolio value) * 100
-      navPercent: portfolioValue > 0 ? (holding.currentValue / portfolioValue) * 100 : 0
-    }))
+    return holdingsWithPrices.value.map(holding => {
+      // Stock performance % = (currentPrice - averagePrice) / averagePrice * 100
+      const stockPerformancePercent =
+        holding.averagePrice > 0
+          ? ((holding.currentPrice - holding.averagePrice) / holding.averagePrice) * 100
+          : null
+      return {
+        ...holding,
+        // NAV% = (stock value / total portfolio value) * 100 (allocation)
+        navPercent: portfolioValue > 0 ? (holding.currentValue / portfolioValue) * 100 : 0,
+        stockPerformancePercent
+      }
+    })
   })
 
   // Computed: Total cost basis
