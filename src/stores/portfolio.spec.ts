@@ -177,3 +177,61 @@ describe('portfolio store – stock source (#31)', () => {
     )
   })
 })
+
+describe('portfolio store – stock performance (#46)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetPortfolioAccount.mockResolvedValue({ totalInvested: 10000, cash: 1000 })
+    setActivePinia(createPinia())
+  })
+
+  it('computes stockPerformancePercent from average and current price', async () => {
+    const holdings: StockHolding[] = [
+      { id: 'h1', symbol: 'AAPL', quantity: 10, averagePrice: 150, currentPrice: 165 }
+    ]
+    mockGetStockHoldings.mockResolvedValue(holdings)
+    mockGetTransactions.mockResolvedValue([])
+
+    const store = usePortfolioStore()
+    await store.fetchHoldings()
+    await store.fetchTransactions()
+
+    const withPrices = store.holdingsWithPrices
+    expect(withPrices).toHaveLength(1)
+    // (165 - 150) / 150 * 100 = 10%
+    expect(withPrices[0].stockPerformancePercent).toBeCloseTo(10)
+  })
+
+  it('computes negative stockPerformancePercent for loss', async () => {
+    const holdings: StockHolding[] = [
+      { id: 'h2', symbol: 'MSFT', quantity: 5, averagePrice: 400, currentPrice: 360 }
+    ]
+    mockGetStockHoldings.mockResolvedValue(holdings)
+    mockGetTransactions.mockResolvedValue([])
+
+    const store = usePortfolioStore()
+    await store.fetchHoldings()
+    await store.fetchTransactions()
+
+    const withPrices = store.holdingsWithPrices
+    expect(withPrices).toHaveLength(1)
+    // (360 - 400) / 400 * 100 = -10%
+    expect(withPrices[0].stockPerformancePercent).toBeCloseTo(-10)
+  })
+
+  it('returns null stockPerformancePercent when averagePrice is 0', async () => {
+    const holdings: StockHolding[] = [
+      { id: 'h3', symbol: 'GOOG', quantity: 1, averagePrice: 0, currentPrice: 140 }
+    ]
+    mockGetStockHoldings.mockResolvedValue(holdings)
+    mockGetTransactions.mockResolvedValue([])
+
+    const store = usePortfolioStore()
+    await store.fetchHoldings()
+    await store.fetchTransactions()
+
+    const withPrices = store.holdingsWithPrices
+    expect(withPrices).toHaveLength(1)
+    expect(withPrices[0].stockPerformancePercent).toBeNull()
+  })
+})

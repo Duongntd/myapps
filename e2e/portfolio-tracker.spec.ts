@@ -47,6 +47,30 @@ test.describe('Portfolio Tracker functionality', () => {
     await expect(transactionsTable.getByText('AAPL')).toBeVisible()
   })
 
+  test('Dashboard: stock performance and NAV% columns display correctly (#46)', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: /open app/i }).nth(1).click()
+    await expect(page).toHaveURL(/\/portfolio-tracker/)
+
+    await page.goto('/portfolio-tracker/transactions')
+    await page.getByRole('button', { name: /add transaction/i }).click()
+    await page.getByLabel(/symbol/i).fill('AAPL')
+    await page.getByLabel(/quantity/i).fill('10')
+    await page.getByLabel(/price per share/i).fill('150')
+    await page.getByRole('button', { name: /save/i }).click()
+
+    await page.goto('/portfolio-tracker/dashboard')
+    await expect(page.getByRole('heading', { name: 'My Holdings' })).toBeVisible({ timeout: 5000 })
+    const holdingsTable = page.getByRole('table')
+
+    await expect(holdingsTable.getByText('AAPL')).toBeVisible()
+    await expect(holdingsTable.getByText('Performance')).toBeVisible()
+    await expect(holdingsTable.getByText('NAV %')).toBeVisible()
+
+    const navPercentHeader = holdingsTable.getByRole('columnheader', { name: /NAV %/i })
+    await expect(navPercentHeader).toBeVisible()
+  })
+
   test('Dashboard: CASH is displayed like a stock in My Holdings when cash > 0 (#43)', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: /open app/i }).nth(1).click()
