@@ -96,7 +96,17 @@
     "totalInvestedInvalid": "Total invested must be greater than or equal to 0",
     "totalCashInvalid": "Total cash must be greater than or equal to 0",
     "accountUpdated": "Account updated successfully!",
-    "updateError": "Failed to update account. Please try again."
+    "updateError": "Failed to update account. Please try again.",
+    "exchangeRates": "Exchange rates",
+    "eurToUsd": "1 EUR = X USD",
+    "eurToUsdDesc": "How many USD per 1 EUR (e.g. 1.19)",
+    "usdToEur": "1 USD = X EUR",
+    "usdToEurDesc": "How many EUR per 1 USD (e.g. 0.84)",
+    "baseCurrency": "Base currency",
+    "baseCurrencyDesc": "Total portfolio value and deposits are displayed in this currency",
+    "exchangeRateInvalid": "Exchange rate must be greater than 0",
+    "priceCurrency": "Price currency",
+    "priceCurrencyDesc": "Currency of the stock price"
   },
   "home": {
     "readTracker": {

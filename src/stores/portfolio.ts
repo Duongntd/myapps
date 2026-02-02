@@ -28,6 +28,7 @@ import {
 } from '@/storage/localStorage'
 import { useAuthStore } from './auth'
 import type { DocumentReference, DocumentData } from 'firebase/firestore'
+import type { Currency } from '@/firebase/firestore'
 
 export interface StockPrice {
   symbol: string
@@ -43,21 +44,34 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   const loading: Ref<boolean> = ref(false)
   const error: Ref<string | null> = ref(null)
 
-  // Computed: Total cash available
-  const totalCash = computed<number>(() => {
-    return account.value?.cash || 0
-  })
+  // Base currency for display (default USD)
+  const baseCurrency = computed<Currency>(() => account.value?.baseCurrency ?? 'USD')
 
-  // Computed: Total invested money (deposits)
-  const totalInvested = computed<number>(() => {
-    return account.value?.totalInvested || 0
-  })
+  // Exchange rates: 1 EUR = eurToUsd USD, 1 USD = usdToEur EUR
+  const eurToUsd = computed<number>(() => account.value?.eurToUsd ?? 1.0)
+  const usdToEur = computed<number>(() => account.value?.usdToEur ?? 1.0)
 
-  // Last buy price for a symbol (from most recent buy transaction)
-  const lastBuyPriceForSymbol = (symbol: string): number | null => {
+  // Convert amount to base currency
+  const toBaseCurrency = (amount: number, fromCurrency: Currency): number => {
+    if (baseCurrency.value === fromCurrency) return amount
+    if (fromCurrency === 'EUR') return amount * eurToUsd.value
+    return amount * usdToEur.value // USD -> EUR
+  }
+
+  // Computed: Total cash available (always in base currency)
+  const totalCash = computed<number>(() => account.value?.cash ?? 0)
+
+  // Computed: Total invested money (deposits, always in base currency)
+  const totalInvested = computed<number>(() => account.value?.totalInvested ?? 0)
+
+  // Last buy price for a symbol in given currency (from most recent matching buy)
+  const lastBuyPriceForSymbol = (symbol: string, currency: Currency): number | null => {
     const sym = symbol.toUpperCase()
     const buys = transactions.value.filter(
-      t => t.type === 'buy' && t.symbol.toUpperCase() === sym
+      t =>
+        t.type === 'buy' &&
+        t.symbol.toUpperCase() === sym &&
+        (t.currency ?? 'USD') === currency
     )
     if (buys.length === 0) return null
     const sorted = [...buys].sort((a, b) => {
@@ -68,29 +82,47 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return sorted[0].price
   }
 
-  // Computed: Get holdings with current prices
-  // Current price: manual (holding.currentPrice) > in-memory (stockPrices) > last buy > average
-  const holdingsWithPrices = computed(() => {
-    return holdings.value.map(holding => {
-      const sym = holding.symbol.toUpperCase()
-      const priceData = stockPrices.value.get(sym)
-      const currentPrice =
+  // Get current price in holding's currency. API prices are USD; convert if holding is EUR.
+  const getCurrentPriceInHoldingCurrency = (holding: StockHolding): number => {
+    const sym = holding.symbol.toUpperCase()
+    const holdingCurrency = holding.currency ?? 'USD'
+    const priceData = stockPrices.value.get(sym)
+    if (holdingCurrency === 'USD') {
+      return (
         holding.currentPrice ??
         priceData?.price ??
-        lastBuyPriceForSymbol(holding.symbol) ??
+        lastBuyPriceForSymbol(holding.symbol, 'USD') ??
         holding.averagePrice ??
         0
-      const currentValue = currentPrice * holding.quantity
-      const costBasis = holding.averagePrice * holding.quantity
-      const nav = currentValue - costBasis
+      )
+    }
+    return (
+      holding.currentPrice ??
+      (priceData?.price != null ? priceData.price * usdToEur.value : null) ??
+      lastBuyPriceForSymbol(holding.symbol, 'EUR') ??
+      holding.averagePrice ??
+      0
+    )
+  }
+
+  // Computed: Get holdings with current prices (values in base currency for totals)
+  const holdingsWithPrices = computed(() => {
+    return holdings.value.map(holding => {
+      const holdingCurrency = holding.currency ?? 'USD'
+      const currentPriceInHoldingCurrency = getCurrentPriceInHoldingCurrency(holding)
+      const currentValueInHoldingCurrency = currentPriceInHoldingCurrency * holding.quantity
+      const costBasisInHoldingCurrency = holding.averagePrice * holding.quantity
+      const currentValueBase = toBaseCurrency(currentValueInHoldingCurrency, holdingCurrency)
+      const costBasisBase = toBaseCurrency(costBasisInHoldingCurrency, holdingCurrency)
+      const nav = currentValueBase - costBasisBase
 
       return {
         ...holding,
-        currentPrice,
-        currentValue,
-        costBasis,
+        currentPrice: currentPriceInHoldingCurrency,
+        currentValue: currentValueBase,
+        costBasis: costBasisBase,
         nav,
-        navPercent: 0 // Will be calculated after portfolio value is known
+        navPercent: 0
       }
     })
   })
@@ -229,6 +261,8 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   }
 
   const sourceOf = (t: Transaction | Omit<Transaction, 'id' | 'createdAt'>) => (t.source ?? '').trim()
+  const currencyOf = (t: Transaction | Omit<Transaction, 'id' | 'createdAt'>): Currency =>
+    t.currency ?? 'USD'
 
   const processTransaction = async (transactionData: Omit<Transaction, 'id' | 'createdAt'>): Promise<void> => {
     const authStore = useAuthStore()
@@ -236,15 +270,21 @@ export const usePortfolioStore = defineStore('portfolio', () => {
 
     const symbol = transactionData.symbol.toUpperCase()
     const source = sourceOf(transactionData)
+    const currency = currencyOf(transactionData)
     const existingHolding = holdings.value.find(
-      h => h.symbol.toUpperCase() === symbol && (h.source ?? '').trim() === source
+      h =>
+        h.symbol.toUpperCase() === symbol &&
+        (h.source ?? '').trim() === source &&
+        (h.currency ?? 'USD') === currency
     )
 
     if (transactionData.type === 'buy') {
       if (existingHolding) {
-        // Update existing holding: recalculate average price
+        // Update existing holding: recalculate average price (same currency)
         const totalQuantity = existingHolding.quantity + transactionData.quantity
-        const totalCost = (existingHolding.averagePrice * existingHolding.quantity) + (transactionData.price * transactionData.quantity)
+        const totalCost =
+          existingHolding.averagePrice * existingHolding.quantity +
+          transactionData.price * transactionData.quantity
         const newAveragePrice = totalCost / totalQuantity
 
         if (authStore.localMode) {
@@ -261,10 +301,11 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       } else {
         // Create new holding; default current price to buy price (manual tracking per #40)
         const newHolding: Omit<StockHolding, 'id' | 'createdAt' | 'updatedAt'> = {
-          symbol: symbol,
+          symbol,
           quantity: transactionData.quantity,
           averagePrice: transactionData.price,
           currentPrice: transactionData.price,
+          currency,
           ...(source ? { source } : {})
         }
 
@@ -349,13 +390,15 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       }
     }
 
-    // Rebuild holdings from transactions, keyed by (symbol, source)
-    const holdingsMap = new Map<string, { quantity: number; totalCost: number }>()
+    // Rebuild holdings from transactions, keyed by (symbol, source, currency)
+    const holdingsMap = new Map<string, { quantity: number; totalCost: number; currency: Currency }>()
     for (const transaction of remainingTransactions) {
       const symbol = transaction.symbol.toUpperCase()
       const source = sourceOf(transaction)
-      const key = `${symbol}|${source}`
-      const existing = holdingsMap.get(key) || { quantity: 0, totalCost: 0 }
+      const currency = currencyOf(transaction)
+      const key = `${symbol}|${source}|${currency}`
+      const existing = holdingsMap.get(key) || { quantity: 0, totalCost: 0, currency }
+      existing.currency = currency
 
       if (transaction.type === 'buy') {
         existing.quantity += transaction.quantity
@@ -375,11 +418,15 @@ export const usePortfolioStore = defineStore('portfolio', () => {
 
     // Create holdings from map
     for (const [key, data] of holdingsMap.entries()) {
-      const [symbol, source] = key.includes('|') ? key.split('|') : [key, '']
+      const parts = key.split('|')
+      const symbol = parts[0] ?? ''
+      const source = parts[1] ?? ''
+      const currency = (parts[2] as Currency) ?? 'USD'
       const newHolding: Omit<StockHolding, 'id' | 'createdAt' | 'updatedAt'> = {
         symbol,
         quantity: data.quantity,
         averagePrice: data.totalCost / data.quantity,
+        currency,
         ...(source ? { source } : {})
       }
       if (authStore.localMode) {
@@ -398,8 +445,10 @@ export const usePortfolioStore = defineStore('portfolio', () => {
       price,
       lastUpdated: new Date()
     })
-    // Persist manual current price to all holdings with this symbol (manual tracking per #40)
-    const matchingHoldings = holdings.value.filter(h => h.symbol.toUpperCase() === upperSymbol)
+    // Persist manual current price only to USD holdings (API returns USD). EUR holdings use conversion at read time.
+    const matchingHoldings = holdings.value.filter(
+      h => h.symbol.toUpperCase() === upperSymbol && (h.currency ?? 'USD') === 'USD'
+    )
     for (const holding of matchingHoldings) {
       if (!holding.id) continue
       try {
@@ -425,6 +474,29 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   const getStockPrice = (symbol: string): number | null => {
     const priceData = stockPrices.value.get(symbol.toUpperCase())
     return priceData?.price || null
+  }
+
+  const updateHoldingCurrentPrice = async (holdingId: string, price: number): Promise<void> => {
+    const authStore = useAuthStore()
+    const holding = holdings.value.find(h => h.id === holdingId)
+    if (!holding?.id) return
+    try {
+      if (authStore.localMode) {
+        await updateHoldingLocal(holdingId, { currentPrice: price })
+      } else if (authStore.user) {
+        await updateHoldingFirebase(authStore.user.uid, holdingId, { currentPrice: price })
+      }
+      const idx = holdings.value.findIndex(h => h.id === holdingId)
+      if (idx !== -1) {
+        holdings.value = [
+          ...holdings.value.slice(0, idx),
+          { ...holdings.value[idx], currentPrice: price },
+          ...holdings.value.slice(idx + 1)
+        ]
+      }
+    } catch (err) {
+      console.error('Error updating holding price:', err)
+    }
   }
 
   const fetchAccount = async (): Promise<void> => {
@@ -497,6 +569,9 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     account,
     loading,
     error,
+    baseCurrency,
+    eurToUsd,
+    usdToEur,
     holdingsWithPrices: holdingsWithNAVPercent,
     totalStockValue,
     totalCash,
@@ -512,6 +587,7 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     createTransaction,
     removeTransaction,
     updateStockPrice,
+    updateHoldingCurrentPrice,
     getStockPrice,
     updateAccount
   }

@@ -96,7 +96,17 @@
     "totalInvestedInvalid": "Tổng đầu tư phải lớn hơn hoặc bằng 0",
     "totalCashInvalid": "Tổng tiền mặt phải lớn hơn hoặc bằng 0",
     "accountUpdated": "Cập nhật tài khoản thành công!",
-    "updateError": "Không thể cập nhật tài khoản. Vui lòng thử lại."
+    "updateError": "Không thể cập nhật tài khoản. Vui lòng thử lại.",
+    "exchangeRates": "Tỷ giá hối đoái",
+    "eurToUsd": "1 EUR = X USD",
+    "eurToUsdDesc": "Bao nhiêu USD cho 1 EUR (vd. 1.19)",
+    "usdToEur": "1 USD = X EUR",
+    "usdToEurDesc": "Bao nhiêu EUR cho 1 USD (vd. 0.84)",
+    "baseCurrency": "Đồng tiền cơ sở",
+    "baseCurrencyDesc": "Tổng giá trị danh mục và tiền gửi hiển thị theo đồng tiền này",
+    "exchangeRateInvalid": "Tỷ giá phải lớn hơn 0",
+    "priceCurrency": "Đồng tiền giá",
+    "priceCurrencyDesc": "Đồng tiền của giá cổ phiếu"
   },
   "home": {
     "readTracker": {

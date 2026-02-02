@@ -13,10 +13,12 @@ const defaultMockStore = {
   totalPortfolioValue: 5000,
   totalInvested: 0,
   loading: false,
+  baseCurrency: 'USD' as const,
   fetchHoldings: mockFetchHoldings,
   fetchTransactions: mockFetchTransactions,
   fetchAccount: mockFetchAccount,
-  updateStockPrice: vi.fn()
+  updateStockPrice: vi.fn(),
+  updateHoldingCurrentPrice: vi.fn()
 }
 
 const mockStoreWithHoldings = {
@@ -31,17 +33,20 @@ const mockStoreWithHoldings = {
       currentPrice: 165,
       currentValue: 1650,
       navPercent: 25,
-      stockPerformancePercent: 10
+      stockPerformancePercent: 10,
+      currency: 'USD' as const
     }
   ],
   totalCash: 0,
   totalPortfolioValue: 6600,
   totalInvested: 5000,
   loading: false,
+  baseCurrency: 'USD' as const,
   fetchHoldings: mockFetchHoldings,
   fetchTransactions: mockFetchTransactions,
   fetchAccount: mockFetchAccount,
-  updateStockPrice: vi.fn()
+  updateStockPrice: vi.fn(),
+  updateHoldingCurrentPrice: vi.fn()
 }
 
 let portfolioStoreMock = defaultMockStore

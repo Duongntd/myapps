@@ -411,10 +411,12 @@ export const updatePortfolioAccount = async (updates: Partial<PortfolioAccount>)
   try {
     const account = await getPortfolioAccount()
     if (!account) {
-      // Create new account with defaults if it doesn't exist
       await setPortfolioAccount({
-        totalInvested: updates.totalInvested || 0,
-        cash: updates.cash || 0
+        totalInvested: updates.totalInvested ?? 0,
+        cash: updates.cash ?? 0,
+        baseCurrency: updates.baseCurrency ?? 'USD',
+        eurToUsd: updates.eurToUsd ?? 1,
+        usdToEur: updates.usdToEur ?? 1
       })
       return
     }
