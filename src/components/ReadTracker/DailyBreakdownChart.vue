@@ -56,6 +56,21 @@ const chartData = computed(() => {
   }
 })
 
+const getMAWindow = (period: 'week' | 'month' | 'year'): number => {
+  if (period === 'week') return 3
+  if (period === 'month') return 7
+  return 14
+}
+
+const calculateMA = (data: number[], window: number): number[] => {
+  return data.map((_, i) => {
+    const start = Math.max(0, i - window + 1)
+    const slice = data.slice(start, i + 1)
+    const sum = slice.reduce((a, b) => a + b, 0)
+    return Math.round((sum / slice.length) * 10) / 10
+  })
+}
+
 const createChart = () => {
   if (!chartCanvas.value) return
 
@@ -65,6 +80,8 @@ const createChart = () => {
 
   const data = chartData.value
   const isMobile = window.innerWidth < 640
+  const maWindow = getMAWindow(props.period)
+  const maData = calculateMA(data.data, maWindow)
 
   chartInstance = new Chart(chartCanvas.value, {
     type: 'bar',
@@ -78,7 +95,22 @@ const createChart = () => {
           borderColor: 'rgb(99, 102, 241)',
           borderWidth: 1,
           barThickness: isMobile ? 'flex' : undefined,
-          maxBarThickness: isMobile ? 20 : 40
+          maxBarThickness: isMobile ? 20 : 40,
+          order: 2
+        },
+        {
+          label: `${maWindow}-day MA`,
+          data: maData,
+          type: 'line',
+          borderColor: 'rgb(245, 158, 11)',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: isMobile ? 4 : 5,
+          order: 1
         }
       ]
     },
@@ -87,19 +119,28 @@ const createChart = () => {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false
+          display: true,
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            boxWidth: 8,
+            font: {
+              size: isMobile ? 10 : 12
+            }
+          }
         },
         tooltip: {
           callbacks: {
             label: (context) => {
               const minutes = context.parsed.y ?? 0
-              if (minutes === 0) return 'No reading'
+              const label = context.dataset.label || ''
+              if (minutes === 0 && context.datasetIndex === 0) return `${label}: No reading`
               if (minutes < 60) {
-                return `${minutes}m`
+                return `${label}: ${Math.round(minutes)}m`
               }
               const hours = Math.floor(minutes / 60)
-              const mins = minutes % 60
-              return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+              const mins = Math.round(minutes % 60)
+              return mins > 0 ? `${label}: ${hours}h ${mins}m` : `${label}: ${hours}h`
             }
           }
         }
