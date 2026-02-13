@@ -7,35 +7,22 @@
         <!-- Exchange Rates -->
         <div class="border-b border-gray-200 pb-6">
           <h3 class="text-sm font-medium text-gray-900 mb-3">{{ $t('portfolioTracker.exchangeRates') }}</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label for="eur-to-usd" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.eurToUsd') }}</label>
-              <input
-                id="eur-to-usd"
-                v-model.number="form.eurToUsd"
-                type="number"
-                step="0.0001"
-                min="0.0001"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                :class="{ 'border-red-500': errors.eurToUsd }"
-              />
-              <p v-if="errors.eurToUsd" class="mt-1 text-sm text-red-600">{{ errors.eurToUsd }}</p>
-              <p class="mt-1 text-xs text-gray-500">{{ $t('portfolioTracker.eurToUsdDesc') }}</p>
-            </div>
-            <div>
-              <label for="usd-to-eur" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.usdToEur') }}</label>
-              <input
-                id="usd-to-eur"
-                v-model.number="form.usdToEur"
-                type="number"
-                step="0.0001"
-                min="0.0001"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                :class="{ 'border-red-500': errors.usdToEur }"
-              />
-              <p v-if="errors.usdToEur" class="mt-1 text-sm text-red-600">{{ errors.usdToEur }}</p>
-              <p class="mt-1 text-xs text-gray-500">{{ $t('portfolioTracker.usdToEurDesc') }}</p>
-            </div>
+          <div>
+            <label for="eur-to-usd" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.eurToUsd') }}</label>
+            <input
+              id="eur-to-usd"
+              v-model.number="form.eurToUsd"
+              type="number"
+              step="0.0001"
+              min="0.0001"
+              class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              :class="{ 'border-red-500': errors.eurToUsd }"
+            />
+            <p v-if="errors.eurToUsd" class="mt-1 text-sm text-red-600">{{ errors.eurToUsd }}</p>
+            <p class="mt-1 text-xs text-gray-500">{{ $t('portfolioTracker.eurToUsdDesc') }}</p>
+            <p class="mt-1 text-xs text-gray-400">
+              {{ $t('portfolioTracker.usdToEur') }}: {{ derivedUsdToEur }}
+            </p>
           </div>
         </div>
 
@@ -118,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePortfolioStore } from '@/stores/portfolio'
 import { useI18n } from 'vue-i18n'
 
@@ -128,16 +115,20 @@ const { t } = useI18n()
 const form = ref({
   baseCurrency: 'USD' as 'EUR' | 'USD',
   eurToUsd: 1.0,
-  usdToEur: 1.0,
   totalInvested: 0,
   cash: 0
+})
+
+const derivedUsdToEur = computed(() => {
+  const rate = form.value.eurToUsd
+  if (rate == null || rate <= 0) return '—'
+  return (1 / rate).toFixed(4)
 })
 
 const errors = ref({
   totalInvested: '',
   cash: '',
-  eurToUsd: '',
-  usdToEur: ''
+  eurToUsd: ''
 })
 
 const submitting = ref(false)
@@ -150,7 +141,6 @@ onMounted(async () => {
     form.value = {
       baseCurrency: (portfolioStore.account.baseCurrency as 'EUR' | 'USD') || 'USD',
       eurToUsd: portfolioStore.account.eurToUsd ?? 1.0,
-      usdToEur: portfolioStore.account.usdToEur ?? 1.0,
       totalInvested: portfolioStore.account.totalInvested ?? 0,
       cash: portfolioStore.account.cash ?? 0
     }
@@ -158,14 +148,10 @@ onMounted(async () => {
 })
 
 const validateForm = (): boolean => {
-  errors.value = { totalInvested: '', cash: '', eurToUsd: '', usdToEur: '' }
+  errors.value = { totalInvested: '', cash: '', eurToUsd: '' }
   
   if (form.value.eurToUsd != null && form.value.eurToUsd <= 0) {
     errors.value.eurToUsd = t('portfolioTracker.exchangeRateInvalid')
-    return false
-  }
-  if (form.value.usdToEur != null && form.value.usdToEur <= 0) {
-    errors.value.usdToEur = t('portfolioTracker.exchangeRateInvalid')
     return false
   }
   if (form.value.totalInvested < 0) {
@@ -187,10 +173,11 @@ const handleSubmit = async () => {
   submitSuccess.value = ''
 
   try {
+    const eurToUsd = form.value.eurToUsd ?? 1
     await portfolioStore.updateAccount({
       baseCurrency: form.value.baseCurrency,
-      eurToUsd: form.value.eurToUsd,
-      usdToEur: form.value.usdToEur,
+      eurToUsd,
+      usdToEur: eurToUsd > 0 ? 1 / eurToUsd : 1,
       totalInvested: form.value.totalInvested,
       cash: form.value.cash
     })

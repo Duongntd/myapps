@@ -80,10 +80,7 @@ test.describe('Portfolio Tracker functionality', () => {
     await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
 
     await expect(page.getByText(/exchange rates/i)).toBeVisible()
-    const eurInput = page.getByLabel(/1 EUR = X USD/i)
-    await eurInput.fill('1.19')
-    const usdInput = page.getByLabel(/1 USD = X EUR/i)
-    await usdInput.fill('0.84')
+    await page.getByLabel(/1 EUR = X USD/i).fill('1.19')
     await page.getByLabel(/base currency/i).selectOption('EUR')
     await page.getByRole('button', { name: /save/i }).click()
     await expect(page.getByText(/account updated/i)).toBeVisible({ timeout: 3000 })
