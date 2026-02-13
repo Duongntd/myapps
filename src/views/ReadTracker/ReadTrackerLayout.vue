@@ -40,6 +40,7 @@ const { t, locale } = i18n
 
 const navItems = computed<NavItem[]>(() => [
   { label: t('readTracker.dashboard'), route: '/read-tracker/dashboard' },
+  { label: t('readTracker.stats'), route: '/read-tracker/stats' },
   { label: t('readTracker.sessions'), route: '/read-tracker/sessions' },
   { label: t('readTracker.books'), route: '/read-tracker/books' },
   { label: t('readTracker.goals'), route: '/read-tracker/goals' },

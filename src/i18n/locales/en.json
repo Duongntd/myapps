@@ -30,6 +30,7 @@
     "sessions": "Sessions",
     "books": "Books",
     "goals": "Goals",
+    "stats": "Stats",
     "settings": "Settings"
   },
   "portfolioTracker": {
@@ -297,6 +298,14 @@
       "november": "November",
       "december": "December"
     }
+  },
+  "stats": {
+    "title": "Reading Stats",
+    "weeklyAverage": "Weekly Average (Daily)",
+    "monthlyAverage": "Monthly Average (Daily)",
+    "dailyGoal": "Daily Goal",
+    "minutesPerDay": "min/day",
+    "noData": "No reading data yet"
   },
   "settings": {
     "title": "Settings",
