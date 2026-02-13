@@ -130,6 +130,8 @@
     "averageReadingTime": "Thời gian đọc trung bình",
     "dailyWeek": "Hàng ngày (Tuần)",
     "dailyMonth": "Hàng ngày (Tháng)",
+    "goalTarget": "Mục tiêu: {goal}/ngày",
+    "noGoalSet": "Chưa đặt mục tiêu hàng ngày",
     "books": "Sách",
     "reading": "Đang đọc",
     "completed": "Đã hoàn thành",

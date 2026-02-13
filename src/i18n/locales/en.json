@@ -130,6 +130,8 @@
     "averageReadingTime": "Average Reading Time",
     "dailyWeek": "Daily (Week)",
     "dailyMonth": "Daily (Month)",
+    "goalTarget": "Goal: {goal}/day",
+    "noGoalSet": "No daily goal set",
     "books": "Books",
     "reading": "Reading",
     "completed": "Completed",

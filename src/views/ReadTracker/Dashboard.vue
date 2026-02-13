@@ -47,29 +47,49 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <!-- Average Reading Time -->
       <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{{ $t('dashboard.averageReadingTime') }}</h3>
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900">{{ $t('dashboard.averageReadingTime') }}</h3>
+          <span v-if="dailyGoalTarget" class="text-xs sm:text-sm text-gray-500">
+            {{ $t('dashboard.goalTarget', { goal: formatDuration(dailyGoalTarget) }) }}
+          </span>
+          <span v-else class="text-xs sm:text-sm text-gray-400 italic">
+            {{ $t('dashboard.noGoalSet') }}
+          </span>
+        </div>
         <div class="space-y-3 sm:space-y-4">
           <div>
             <div class="flex justify-between items-center mb-1">
               <span class="text-xs sm:text-sm text-gray-600">{{ $t('dashboard.dailyWeek') }}</span>
-              <span class="text-base sm:text-lg font-semibold text-gray-900">{{ formatDuration(weekDailyAverage) }}</span>
+              <span class="text-base sm:text-lg font-semibold text-gray-900">
+                {{ formatDuration(weekDailyAverage) }}
+                <span v-if="dailyGoalTarget" class="text-xs sm:text-sm font-normal text-gray-400"> / {{ formatDuration(dailyGoalTarget) }}</span>
+              </span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
               <div
-                class="bg-primary-600 h-2 rounded-full transition-all"
-                :style="{ width: `${Math.min((weekDailyAverage / 120) * 100, 100)}%` }"
+                :class="[
+                  'h-2 rounded-full transition-all',
+                  !dailyGoalTarget ? 'bg-primary-600' : weekDailyAverage >= dailyGoalTarget ? 'bg-green-500' : 'bg-primary-600'
+                ]"
+                :style="{ width: dailyGoalTarget ? `${Math.min((weekDailyAverage / dailyGoalTarget) * 100, 100)}%` : '100%' }"
               ></div>
             </div>
           </div>
           <div>
             <div class="flex justify-between items-center mb-1">
               <span class="text-xs sm:text-sm text-gray-600">{{ $t('dashboard.dailyMonth') }}</span>
-              <span class="text-base sm:text-lg font-semibold text-gray-900">{{ formatDuration(monthDailyAverage) }}</span>
+              <span class="text-base sm:text-lg font-semibold text-gray-900">
+                {{ formatDuration(monthDailyAverage) }}
+                <span v-if="dailyGoalTarget" class="text-xs sm:text-sm font-normal text-gray-400"> / {{ formatDuration(dailyGoalTarget) }}</span>
+              </span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
               <div
-                class="bg-primary-600 h-2 rounded-full transition-all"
-                :style="{ width: `${Math.min((monthDailyAverage / 120) * 100, 100)}%` }"
+                :class="[
+                  'h-2 rounded-full transition-all',
+                  !dailyGoalTarget ? 'bg-primary-600' : monthDailyAverage >= dailyGoalTarget ? 'bg-green-500' : 'bg-primary-600'
+                ]"
+                :style="{ width: dailyGoalTarget ? `${Math.min((monthDailyAverage / dailyGoalTarget) * 100, 100)}%` : '100%' }"
               ></div>
             </div>
           </div>
@@ -357,27 +377,34 @@ const yearSessions = computed(() => {
   return sessionsStore.sessions.filter(session => session.date && isThisYear(session.date.toDate())).length
 })
 
-// Calculate averages
+// Get user's daily goal (if set)
+const dailyGoal = computed(() => {
+  return goalsStore.goals.find(g => g.type === 'daily') || null
+})
+
+const dailyGoalTarget = computed(() => {
+  return dailyGoal.value?.targetMinutes ?? null
+})
+
+// Calculate averages (divided by all calendar days in the period, not just days with reading)
 const weekDailyAverage = computed(() => {
-  const weekSessions = sessionsStore.sessions.filter(s => s.date && isThisWeek(s.date.toDate()))
-  if (weekSessions.length === 0) return 0
+  if (weekTotal.value === 0) return 0
   
-  const daysWithReading = new Set(
-    weekSessions.map(s => formatDate(s.date!.toDate(), 'yyyy-MM-dd'))
-  ).size
+  const now = new Date()
+  const weekStart = startOfWeek(now)
+  const calendarDays = eachDayOfInterval({ start: weekStart, end: now }).length
   
-  return Math.round(weekTotal.value / Math.max(daysWithReading, 1))
+  return Math.round(weekTotal.value / calendarDays)
 })
 
 const monthDailyAverage = computed(() => {
-  const monthSessions = sessionsStore.sessions.filter(s => s.date && isThisMonth(s.date.toDate()))
-  if (monthSessions.length === 0) return 0
+  if (monthTotal.value === 0) return 0
   
-  const daysWithReading = new Set(
-    monthSessions.map(s => formatDate(s.date!.toDate(), 'yyyy-MM-dd'))
-  ).size
+  const now = new Date()
+  const monthStart = startOfMonth(now)
+  const calendarDays = eachDayOfInterval({ start: monthStart, end: now }).length
   
-  return Math.round(monthTotal.value / Math.max(daysWithReading, 1))
+  return Math.round(monthTotal.value / calendarDays)
 })
 
 // Calculate reading streak
