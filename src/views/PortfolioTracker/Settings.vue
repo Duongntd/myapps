@@ -9,8 +9,9 @@
           <h3 class="text-sm font-medium text-gray-900 mb-3">{{ $t('portfolioTracker.exchangeRates') }}</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.eurToUsd') }}</label>
+              <label for="eur-to-usd" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.eurToUsd') }}</label>
               <input
+                id="eur-to-usd"
                 v-model.number="form.eurToUsd"
                 type="number"
                 step="0.0001"
@@ -22,8 +23,9 @@
               <p class="mt-1 text-xs text-gray-500">{{ $t('portfolioTracker.eurToUsdDesc') }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.usdToEur') }}</label>
+              <label for="usd-to-eur" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.usdToEur') }}</label>
               <input
+                id="usd-to-eur"
                 v-model.number="form.usdToEur"
                 type="number"
                 step="0.0001"
@@ -39,8 +41,9 @@
 
         <!-- Base Currency -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.baseCurrency') }}</label>
+          <label for="base-currency" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('portfolioTracker.baseCurrency') }}</label>
           <select
+            id="base-currency"
             v-model="form.baseCurrency"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
           >
@@ -52,10 +55,11 @@
 
         <!-- Total Invested -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="total-invested" class="block text-sm font-medium text-gray-700 mb-2">
             {{ $t('portfolioTracker.totalInvested') }} <span class="text-red-500">*</span>
           </label>
           <input
+            id="total-invested"
             v-model.number="form.totalInvested"
             type="number"
             step="0.01"
@@ -70,10 +74,11 @@
 
         <!-- Total Cash -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="total-cash" class="block text-sm font-medium text-gray-700 mb-2">
             {{ $t('portfolioTracker.totalCash') }} <span class="text-red-500">*</span>
           </label>
           <input
+            id="total-cash"
             v-model.number="form.cash"
             type="number"
             step="0.01"

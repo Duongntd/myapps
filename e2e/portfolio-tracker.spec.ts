@@ -111,9 +111,8 @@ test.describe('Portfolio Tracker functionality', () => {
     await page.goto('/portfolio-tracker/settings')
     await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
 
-    const numberInputs = page.getByRole('spinbutton')
-    await numberInputs.first().fill('1000')
-    await numberInputs.nth(1).fill('5000')
+    await page.getByLabel(/total invested/i).fill('1000')
+    await page.getByLabel(/total cash/i).fill('5000')
     await page.getByRole('button', { name: /save/i }).click()
 
     await page.goto('/portfolio-tracker/dashboard')

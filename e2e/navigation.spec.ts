@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Navigation between views', () => {
   test('home shows app cards and navigates to Read Tracker', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Welcome to MyApps' })).toBeVisible()
     await expect(page.getByText(/Read Tracker/)).toBeVisible()
 
     await page.getByRole('button', { name: /open app/i }).first().click()
@@ -17,7 +17,7 @@ test.describe('Navigation between views', () => {
 
   test('home navigates to Portfolio Tracker', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Welcome to MyApps' })).toBeVisible()
 
     await page.getByRole('button', { name: /open app/i }).nth(1).click()
     await expect(page).toHaveURL(/\/portfolio-tracker/)
@@ -28,7 +28,7 @@ test.describe('Navigation between views', () => {
 
   test('Read Tracker inner navigation: Dashboard, Sessions, Books, Goals', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Welcome to MyApps' })).toBeVisible()
     await page.goto('/read-tracker/dashboard')
 
     await expect(page).toHaveURL(/\/read-tracker\/dashboard/)
@@ -49,7 +49,7 @@ test.describe('Navigation between views', () => {
 
   test('Portfolio Tracker inner navigation: Dashboard, Transactions', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Welcome to MyApps' })).toBeVisible()
     await page.goto('/portfolio-tracker/dashboard')
 
     await expect(page).toHaveURL(/\/portfolio-tracker\/dashboard/)
@@ -62,7 +62,7 @@ test.describe('Navigation between views', () => {
 
   test('can go back to home from Read Tracker via header', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Welcome to MyApps' })).toBeVisible()
     await page.goto('/read-tracker/dashboard')
     await expect(page).toHaveURL(/\/read-tracker\/dashboard/)
 
