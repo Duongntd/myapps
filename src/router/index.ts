@@ -47,6 +47,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/ReadTracker/Goals.vue')
       },
       {
+        path: 'stats',
+        name: 'read-tracker-stats',
+        component: () => import('@/views/ReadTracker/Stats.vue')
+      },
+      {
         path: 'settings',
         name: 'read-tracker-settings',
         component: () => import('@/views/ReadTracker/Settings.vue')

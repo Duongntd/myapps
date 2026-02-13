@@ -30,6 +30,7 @@
     "sessions": "Phiên đọc",
     "books": "Sách",
     "goals": "Mục tiêu",
+    "stats": "Thống kê",
     "settings": "Cài đặt"
   },
   "portfolioTracker": {
@@ -287,6 +288,14 @@
       "november": "Tháng Mười Một",
       "december": "Tháng Mười Hai"
     }
+  },
+  "stats": {
+    "title": "Thống kê đọc sách",
+    "weeklyAverage": "Trung bình tuần (Hàng ngày)",
+    "monthlyAverage": "Trung bình tháng (Hàng ngày)",
+    "dailyGoal": "Mục tiêu hàng ngày",
+    "minutesPerDay": "phút/ngày",
+    "noData": "Chưa có dữ liệu đọc sách"
   },
   "settings": {
     "title": "Cài đặt",
