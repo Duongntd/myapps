@@ -71,6 +71,35 @@ test.describe('Portfolio Tracker functionality', () => {
     await expect(navPercentHeader).toBeVisible()
   })
 
+  test('Settings: exchange rates and base currency can be configured (#47)', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: /open app/i }).nth(1).click()
+    await expect(page).toHaveURL(/\/portfolio-tracker/)
+
+    await page.goto('/portfolio-tracker/settings')
+    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
+
+    await expect(page.getByText(/exchange rates/i)).toBeVisible()
+    await page.getByLabel(/1 EUR = X USD/i).fill('1.19')
+    await page.getByLabel(/base currency/i).selectOption('EUR')
+    await page.getByRole('button', { name: /save/i }).click()
+    await expect(page.getByText(/account updated/i)).toBeVisible({ timeout: 3000 })
+  })
+
+  test('Transactions: currency can be selected when adding transaction (#47)', async ({ page }) => {
+    await page.goto('/portfolio-tracker/transactions')
+    await page.getByRole('button', { name: /add transaction/i }).click()
+    await page.getByLabel(/symbol/i).fill('AAPL')
+    await page.getByLabel(/quantity/i).fill('5')
+    await page.getByLabel(/price per share/i).fill('100')
+    const currencySelect = page.getByRole('combobox', { name: /price currency/i })
+    await currencySelect.selectOption('EUR')
+    await page.getByRole('button', { name: /save/i }).click()
+
+    const table = page.getByRole('table')
+    await expect(table.getByText('EUR')).toBeVisible({ timeout: 5000 })
+  })
+
   test('Dashboard: CASH is displayed like a stock in My Holdings when cash > 0 (#43)', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: /open app/i }).nth(1).click()
@@ -79,9 +108,8 @@ test.describe('Portfolio Tracker functionality', () => {
     await page.goto('/portfolio-tracker/settings')
     await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
 
-    const numberInputs = page.getByRole('spinbutton')
-    await numberInputs.first().fill('1000')
-    await numberInputs.nth(1).fill('5000')
+    await page.getByLabel(/total invested/i).fill('1000')
+    await page.getByLabel(/total cash/i).fill('5000')
     await page.getByRole('button', { name: /save/i }).click()
 
     await page.goto('/portfolio-tracker/dashboard')

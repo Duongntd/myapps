@@ -113,6 +113,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.symbol') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.priceCurrency') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.source') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.quantity') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.averagePrice') }}</th>
@@ -132,13 +133,16 @@
                 <span class="text-sm font-semibold text-gray-900">{{ holding.symbol }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
+                <span class="text-sm text-gray-600">{{ holding.id === 'cash' ? '—' : getHoldingCurrency(holding) }}</span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm text-gray-600">{{ (holding.source || '').trim() || '—' }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span class="text-sm text-gray-900">{{ holding.id === 'cash' ? '—' : holding.quantity }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-sm text-gray-900">{{ holding.id === 'cash' ? '—' : formatCurrency(holding.averagePrice) }}</span>
+                <span class="text-sm text-gray-900">{{ holding.id === 'cash' ? '—' : formatCurrency(holding.averagePrice, getHoldingCurrency(holding)) }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <template v-if="holding.id === 'cash'">
@@ -152,11 +156,11 @@
                       step="0.01"
                       min="0"
                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      @keyup.enter="savePrice(holding.symbol)"
+                      @keyup.enter="savePrice(holding)"
                       @keyup.esc="cancelEditPrice"
                     />
                     <button
-                      @click="savePrice(holding.symbol)"
+                      @click="savePrice(holding)"
                       class="text-green-600 hover:text-green-800 text-sm font-medium"
                     >
                       ✓
@@ -169,7 +173,7 @@
                     </button>
                   </div>
                   <div v-else class="flex items-center gap-2">
-                    <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentPrice) }}</span>
+                    <span v-if="holding.currentPrice > 0" class="text-sm text-gray-900">{{ formatCurrency(holding.currentPrice, getHoldingCurrency(holding)) }}</span>
                     <span v-else class="text-sm text-gray-400">{{ $t('portfolioTracker.loading') }}</span>
                     <button
                       @click="startEditPrice(holding.id!, holding.currentPrice)"
@@ -254,7 +258,8 @@ const filteredHoldings = computed(() => {
     currentPrice: 0,
     currentValue: cash,
     navPercent: total > 0 ? (cash / total) * 100 : 0,
-    stockPerformancePercent: null as number | null
+    stockPerformancePercent: null as number | null,
+    currency: undefined as 'EUR' | 'USD' | undefined
   }
   return [cashRow, ...filtered]
 })
@@ -276,9 +281,9 @@ const cancelEditPrice = () => {
   editPriceValue.value = 0
 }
 
-const savePrice = async (symbol: string) => {
-  if (editPriceValue.value > 0) {
-    await portfolioStore.updateStockPrice(symbol, editPriceValue.value)
+const savePrice = async (holding: { id?: string; symbol: string }) => {
+  if (editPriceValue.value > 0 && holding.id) {
+    await portfolioStore.updateHoldingCurrentPrice(holding.id, editPriceValue.value)
   }
   cancelEditPrice()
 }
@@ -302,10 +307,11 @@ const refreshPrices = async () => {
   }
 }
 
-const formatCurrency = (value: number): string => {
+const formatCurrency = (value: number, currency?: 'EUR' | 'USD'): string => {
+  const curr = currency ?? portfolioStore.baseCurrency ?? 'USD'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: curr,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value)
@@ -316,6 +322,9 @@ const formatPercent = (value: number): string => {
 }
 
 // Stock performance: +X.XX% (green) or -X.XX% (red)
+const getHoldingCurrency = (holding: { id?: string; currency?: 'EUR' | 'USD' }): 'EUR' | 'USD' =>
+  holding.id === 'cash' ? portfolioStore.baseCurrency : (holding.currency ?? 'USD')
+
 const formatStockPerformance = (value: number): string => {
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
 }

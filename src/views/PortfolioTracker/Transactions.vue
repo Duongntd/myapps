@@ -90,17 +90,27 @@
             <label for="tx-price" class="block text-sm font-medium text-gray-700 mb-2">
               {{ $t('portfolioTracker.pricePerShare') }} <span class="text-red-500">*</span>
             </label>
-            <input
-              id="tx-price"
-              v-model.number="form.price"
-              type="number"
-              required
-              min="0.01"
-              step="0.01"
-              placeholder="150.00"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              :class="{ 'border-red-500': errors.price }"
-            />
+            <div class="flex gap-2">
+              <input
+                id="tx-price"
+                v-model.number="form.price"
+                type="number"
+                required
+                min="0.01"
+                step="0.01"
+                placeholder="150.00"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                :class="{ 'border-red-500': errors.price }"
+              />
+              <select
+                v-model="form.currency"
+                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white text-gray-900 min-w-[80px]"
+                :aria-label="$t('portfolioTracker.priceCurrency')"
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
             <p v-if="errors.price" class="mt-1 text-sm text-red-600">{{ errors.price }}</p>
           </div>
 
@@ -227,6 +237,7 @@
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.source') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.quantity') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.price') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.priceCurrency') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('portfolioTracker.total') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ $t('common.actions') }}</th>
             </tr>
@@ -258,10 +269,13 @@
                 <span class="text-sm text-gray-900">{{ transaction.quantity }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-sm text-gray-900">{{ formatCurrency(transaction.price) }}</span>
+                <span class="text-sm text-gray-900">{{ formatCurrency(transaction.price, transaction.currency) }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
-                <span class="text-sm font-medium text-gray-900">{{ formatCurrency(transaction.quantity * transaction.price) }}</span>
+                <span class="text-sm text-gray-600">{{ transaction.currency ?? 'USD' }}</span>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span class="text-sm font-medium text-gray-900">{{ formatCurrency(transaction.quantity * transaction.price, transaction.currency) }}</span>
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <button
@@ -301,6 +315,7 @@ const form = ref({
   symbol: '',
   quantity: 0,
   price: 0,
+  currency: 'USD' as 'EUR' | 'USD',
   date: new Date().toISOString().split('T')[0],
   sourceSelect: '' as string,
   sourceNew: ''
@@ -349,6 +364,7 @@ const closeForm = () => {
     symbol: '',
     quantity: 0,
     price: 0,
+    currency: 'USD',
     date: new Date().toISOString().split('T')[0],
     sourceSelect: '',
     sourceNew: ''
@@ -397,6 +413,7 @@ const handleSubmit = async () => {
       symbol: form.value.symbol.toUpperCase(),
       quantity: form.value.quantity,
       price: form.value.price,
+      currency: form.value.currency,
       date: timestamp,
       ...(effectiveSource ? { source: effectiveSource } : {})
     })
@@ -436,10 +453,10 @@ const formatDate = (timestamp: Timestamp | { seconds: number; nanoseconds?: numb
   }).format(date)
 }
 
-const formatCurrency = (value: number): string => {
+const formatCurrency = (value: number, currency: 'EUR' | 'USD' = 'USD'): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value)

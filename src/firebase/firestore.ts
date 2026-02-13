@@ -56,9 +56,13 @@ export interface StockHolding {
   currentPrice?: number // Manual/last-known price per share; default is last buy price
   /** Broker/source where the holding was bought (e.g. Trading 212, Interactive Broker). Empty = legacy/unset. */
   source?: string
+  /** Currency of averagePrice and currentPrice. Defaults to USD for backward compatibility. */
+  currency?: Currency
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
+
+export type Currency = 'EUR' | 'USD'
 
 export interface Transaction {
   id?: string
@@ -69,13 +73,21 @@ export interface Transaction {
   date: Timestamp
   /** Broker/source where the transaction was made (e.g. Trading 212, Interactive Broker). Empty = legacy/unset. */
   source?: string
+  /** Currency of the price (EUR or USD). Defaults to USD for backward compatibility. */
+  currency?: Currency
   createdAt?: Timestamp
 }
 
 export interface PortfolioAccount {
   id?: string
-  totalInvested: number // Total money deposited/invested
-  cash: number // Available cash
+  totalInvested: number // Total money deposited/invested (in baseCurrency)
+  cash: number // Available cash (in baseCurrency)
+  /** Base currency for displaying totals. Defaults to USD. */
+  baseCurrency?: Currency
+  /** 1 EUR = X USD. Used to convert EUR to USD. */
+  eurToUsd?: number
+  /** 1 USD = X EUR. Used to convert USD to EUR. */
+  usdToEur?: number
   updatedAt?: Timestamp
 }
 
