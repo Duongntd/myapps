@@ -1,26 +1,26 @@
 <template>
   <div
     ref="cardEl"
-    class="task-card group relative rounded-lg p-3 text-sm transition-all"
+    class="task-card group relative rounded-lg p-3 text-sm transition-all cursor-grab active:cursor-grabbing"
     :class="[
-      task.status === 'done' ? 'opacity-50' : '',
+      task.status === 'done' ? 'opacity-55' : '',
       isDragging ? 'opacity-30' : '',
       bgClass
     ]"
     :data-id="task.id"
+    draggable="true"
+    @dragstart="onCardDragStart"
+    @dragend="onDragEnd"
   >
     <div class="flex items-start justify-between gap-1.5">
-      <!-- Drag handle -->
+      <!-- Priority dot -->
       <span
-        class="drag-handle flex-shrink-0 cursor-grab text-xs leading-none select-none text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pt-0.5 touch-manipulation"
-        :class="{ 'opacity-50': isMobile }"
-        draggable="true"
-        @dragstart="onDragStart"
-        @dragend="onDragEnd"
-        @touchstart.prevent="onTouchStart"
-        @touchmove.prevent="onTouchMove"
-        @touchend="onTouchEnd"
-      >&#x2807;</span>
+        class="w-[7px] h-[7px] rounded-full flex-shrink-0 mt-1 cursor-pointer transition-transform hover:scale-[1.4]"
+        :class="priorityDotClass"
+        :title="'Priority: ' + task.priority"
+        @click.stop="cyclePriority"
+        @mousedown.stop
+      ></span>
 
       <!-- Title -->
       <span
@@ -36,6 +36,7 @@
         :contenteditable="true"
         spellcheck="false"
         v-text="task.title"
+        @mousedown.stop
         @blur="onTitleBlur"
         @keydown.enter.prevent="($event.target as HTMLElement).blur()"
         @keydown.escape="onTitleEscape"
@@ -45,6 +46,7 @@
       <button
         class="flex-shrink-0 rounded p-0.5 text-sm leading-none text-transparent group-hover:text-gray-400 hover:!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20 transition-colors"
         title="Delete"
+        @mousedown.stop
         @click="onDelete"
       >&times;</button>
     </div>
@@ -55,6 +57,7 @@
       class="editable mt-1 rounded px-1 py-0.5 -mx-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed cursor-text hover:bg-black/[0.04] focus:outline-2 focus:outline-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors"
       :contenteditable="true"
       spellcheck="false"
+      @mousedown.stop
       @blur="onDescBlur"
       @keydown.enter.prevent="($event.target as HTMLElement).blur()"
       v-text="task.description"
@@ -68,6 +71,7 @@
         <button
           class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold cursor-pointer select-none border-none transition-all hover:brightness-[0.93] hover:scale-[1.04] active:scale-[0.96]"
           :class="statusBadgeClass"
+          @mousedown.stop
           @click.stop="toggleStatusDropdown"
         >
           <span class="w-[5px] h-[5px] rounded-full flex-shrink-0" :class="statusDotClass"></span>
@@ -76,7 +80,7 @@
         <Transition name="dropdown">
           <div
             v-if="showStatusDropdown"
-            class="absolute top-full mt-1 z-50 min-w-[120px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg p-1"
+            class="absolute bottom-full mb-1 z-50 min-w-[120px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg p-1"
             :class="dropdownAlign"
           >
             <div
@@ -93,15 +97,6 @@
         </Transition>
       </div>
 
-      <!-- Priority dot -->
-      <button
-        class="flex items-center gap-1 text-[0.6rem] font-semibold uppercase tracking-wider cursor-pointer select-none transition-colors"
-        :class="priorityTextClass"
-        @click.stop="cyclePriority"
-        :title="'Priority: ' + task.priority"
-      >
-        <span class="w-[6px] h-[6px] rounded-full" :class="priorityDotClass"></span>
-      </button>
     </div>
   </div>
 </template>
@@ -128,7 +123,6 @@ const descEl = ref<HTMLElement>()
 const statusWrapper = ref<HTMLElement>()
 const showStatusDropdown = ref(false)
 const isDragging = ref(false)
-const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
 const bgClass = computed(() => {
   return 'bg-gray-100 dark:bg-gray-800/60 hover:shadow-sm'
@@ -183,14 +177,6 @@ const priorityDotClass = computed(() => {
   return map[props.task.priority]
 })
 
-const priorityTextClass = computed(() => {
-  const map: Record<TaskPriority, string> = {
-    high: 'text-red-500',
-    medium: 'text-yellow-500',
-    low: 'text-gray-400'
-  }
-  return map[props.task.priority]
-})
 
 const dropdownAlign = computed(() => {
   if (!statusWrapper.value) return 'left-0'
@@ -246,8 +232,13 @@ function onDelete() {
   emit('delete', props.task.id)
 }
 
-// Drag
-function onDragStart(e: DragEvent) {
+// Drag — whole card is draggable, prevent on interactive children
+function onCardDragStart(e: DragEvent) {
+  const target = e.target as HTMLElement
+  if (target.classList.contains('editable') || target.closest('.editable') || target.closest('.status-badge') || target.closest('.card-delete')) {
+    e.preventDefault()
+    return
+  }
   isDragging.value = true
   e.dataTransfer?.setData('text/plain', props.task.id)
   emit('dragStart', props.task.id, e)
@@ -256,21 +247,6 @@ function onDragStart(e: DragEvent) {
 function onDragEnd() {
   isDragging.value = false
   emit('dragEnd')
-}
-
-// Touch drag
-function onTouchStart(e: TouchEvent) {
-  isDragging.value = true
-  emit('touchDrag', props.task.id, e.touches[0].clientX, e.touches[0].clientY, 'start')
-}
-
-function onTouchMove(e: TouchEvent) {
-  emit('touchDrag', props.task.id, e.touches[0].clientX, e.touches[0].clientY, 'move')
-}
-
-function onTouchEnd(e: TouchEvent) {
-  isDragging.value = false
-  emit('touchDrag', props.task.id, e.changedTouches[0].clientX, e.changedTouches[0].clientY, 'end')
 }
 
 // Close dropdown on outside click
