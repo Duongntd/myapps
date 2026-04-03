@@ -26,7 +26,8 @@
       <span
         v-if="task.tag"
         class="inline-block rounded px-1.5 py-0.5 text-xs font-semibold font-mono bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-      >{{ task.title }}</span>
+        v-text="task.title"
+      ></span>
       <span
         v-else
         ref="titleEl"
@@ -34,10 +35,11 @@
         :class="{ 'line-through': task.status === 'done' }"
         :contenteditable="true"
         spellcheck="false"
+        v-text="task.title"
         @blur="onTitleBlur"
         @keydown.enter.prevent="($event.target as HTMLElement).blur()"
         @keydown.escape="onTitleEscape"
-      >{{ task.title }}</span>
+      ></span>
 
       <!-- Delete -->
       <button
@@ -55,8 +57,9 @@
       spellcheck="false"
       @blur="onDescBlur"
       @keydown.enter.prevent="($event.target as HTMLElement).blur()"
+      v-text="task.description"
       @keydown.escape="onDescEscape"
-    >{{ task.description }}</div>
+    ></div>
 
     <!-- Footer: status + priority -->
     <div class="flex items-center justify-between mt-1.5 gap-2">

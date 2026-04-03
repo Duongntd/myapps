@@ -52,16 +52,16 @@ export const useTaskListStore = defineStore('taskList', () => {
   }
 
   // ── Carry forward: move overdue todo/inprogress tasks to today ──
-  function carryForward(): boolean {
+  function carryForward(): Task[] {
     const today = todayStr()
-    let moved = false
+    const movedTasks: Task[] = []
     tasks.value.forEach(t => {
       if ((t.status === 'todo' || t.status === 'inprogress') && t.date < today) {
         t.date = today
-        moved = true
+        movedTasks.push(t)
       }
     })
-    return moved
+    return movedTasks
   }
 
   // ── Local storage ──
@@ -86,34 +86,37 @@ export const useTaskListStore = defineStore('taskList', () => {
     try {
       const q = query(getCollection(), orderBy('createdAt', 'desc'))
       const snapshot = await getDocs(q)
-      tasks.value = snapshot.docs.map(d => {
-        const data = d.data()
-        return {
-          id: d.id,
-          title: data.title ?? '',
-          description: data.description ?? '',
-          status: data.status ?? 'todo',
-          priority: data.priority ?? 'medium',
-          date: data.date ?? todayStr(),
-          tag: data.tag ?? false,
-          createdAt: data.createdAt?.toDate?.()?.toISOString?.() ?? undefined,
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString?.() ?? undefined
-        } as Task
-      })
+      tasks.value = snapshot.docs
+        .filter(d => !d.data()._deleted)
+        .map(d => {
+          const data = d.data()
+          return {
+            id: d.id,
+            title: data.title ?? '',
+            description: data.description ?? '',
+            status: data.status ?? 'todo',
+            priority: data.priority ?? 'medium',
+            date: data.date ?? todayStr(),
+            tag: data.tag ?? false,
+            createdAt: data.createdAt?.toDate?.()?.toISOString?.() ?? undefined,
+            updatedAt: data.updatedAt?.toDate?.()?.toISOString?.() ?? undefined
+          } as Task
+        })
     } finally {
       loading.value = false
     }
   }
 
   async function saveTaskToFirestore(task: Task) {
-    const ref = doc(db, `users/${userId.value}/tasks/${task.id}`)
-    await updateDoc(ref, {
+    const taskRef = doc(db, `users/${userId.value}/tasks/${task.id}`)
+    await updateDoc(taskRef, {
       title: task.title,
       description: task.description,
       status: task.status,
       priority: task.priority,
       date: task.date,
       tag: task.tag,
+      _deleted: task._deleted ?? false,
       updatedAt: Timestamp.now()
     })
   }
@@ -126,21 +129,21 @@ export const useTaskListStore = defineStore('taskList', () => {
     } else {
       await loadFromFirestore()
     }
-    if (carryForward()) {
-      await saveAll()
+    const movedTasks = carryForward()
+    if (movedTasks.length > 0) {
+      await saveTasks(movedTasks)
     }
   }
 
-  async function saveAll() {
+  async function saveTasks(changedTasks: Task[]) {
     if (isLocal.value) {
       saveLocal()
       return
     }
-    // Batch update all tasks that were carried forward
     const batch = writeBatch(db)
-    for (const task of tasks.value) {
-      const ref = doc(db, `users/${userId.value}/tasks/${task.id}`)
-      batch.update(ref, { date: task.date, updatedAt: Timestamp.now() })
+    for (const task of changedTasks) {
+      const taskRef = doc(db, `users/${userId.value}/tasks/${task.id}`)
+      batch.update(taskRef, { date: task.date, updatedAt: Timestamp.now() })
     }
     await batch.commit()
   }
@@ -193,17 +196,42 @@ export const useTaskListStore = defineStore('taskList', () => {
     const idx = tasks.value.findIndex(t => t.id === taskId)
     if (idx === -1) return
 
-    const task = { ...tasks.value[idx] }
-    tasks.value.splice(idx, 1)
+    const task = tasks.value[idx]
 
+    if (withUndo) {
+      // Soft-delete: hide from UI, keep in Firestore until undo window expires
+      task._deleted = true
+      if (isLocal.value) {
+        saveLocal()
+      } else {
+        await saveTaskToFirestore(task)
+      }
+
+      pushUndo({
+        type: 'delete',
+        task: { ...task },
+        timer: setTimeout(() => commitDelete(taskId), 5000)
+      })
+    } else {
+      // Hard delete (called after undo window or explicitly)
+      tasks.value.splice(idx, 1)
+      if (isLocal.value) {
+        saveLocal()
+      } else {
+        await deleteDoc(doc(db, `users/${userId.value}/tasks/${taskId}`))
+      }
+    }
+  }
+
+  async function commitDelete(taskId: string) {
+    removeUndo('delete', taskId)
+    const idx = tasks.value.findIndex(t => t.id === taskId)
+    if (idx === -1) return
+    tasks.value.splice(idx, 1)
     if (isLocal.value) {
       saveLocal()
     } else {
       await deleteDoc(doc(db, `users/${userId.value}/tasks/${taskId}`))
-    }
-
-    if (withUndo) {
-      pushUndo({ type: 'delete', task, timer: setTimeout(() => removeUndo('delete', task.id), 5000) })
     }
   }
 
@@ -275,23 +303,15 @@ export const useTaskListStore = defineStore('taskList', () => {
     if (idx !== -1) undoStack.value.splice(idx, 1)
 
     if (entry.type === 'delete') {
-      // Re-add the task
-      if (isLocal.value) {
-        tasks.value.push(entry.task)
-        saveLocal()
-      } else {
-        const docRef = await addDoc(getCollection(), {
-          title: entry.task.title,
-          description: entry.task.description,
-          status: entry.task.status,
-          priority: entry.task.priority,
-          date: entry.task.date,
-          tag: entry.task.tag,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now()
-        })
-        entry.task.id = docRef.id
-        tasks.value.push(entry.task)
+      // Restore soft-deleted task
+      const task = tasks.value.find(t => t.id === entry.task.id)
+      if (task) {
+        delete task._deleted
+        if (isLocal.value) {
+          saveLocal()
+        } else {
+          await saveTaskToFirestore(task)
+        }
       }
     } else if (entry.type === 'status' && entry.previousStatus) {
       const task = tasks.value.find(t => t.id === entry.task.id)
@@ -305,15 +325,15 @@ export const useTaskListStore = defineStore('taskList', () => {
   // ── Queries ──
   function tasksForDate(date: string): Task[] {
     return tasks.value
-      .filter(t => t.date === date && t.status !== 'done' && t.status !== 'onhold')
+      .filter(t => !t._deleted && t.date === date && t.status !== 'done' && t.status !== 'onhold')
       .sort((a, b) => {
         const order: Record<string, number> = { inprogress: 0, todo: 1 }
         return (order[a.status] ?? 1) - (order[b.status] ?? 1)
       })
   }
 
-  const onHoldTasks = computed(() => tasks.value.filter(t => t.status === 'onhold'))
-  const doneTasks = computed(() => tasks.value.filter(t => t.status === 'done'))
+  const onHoldTasks = computed(() => tasks.value.filter(t => !t._deleted && t.status === 'onhold'))
+  const doneTasks = computed(() => tasks.value.filter(t => !t._deleted && t.status === 'done'))
 
   return {
     tasks,

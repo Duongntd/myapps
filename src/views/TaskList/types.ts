@@ -11,6 +11,7 @@ export interface Task {
   tag: boolean
   createdAt?: string
   updatedAt?: string
+  _deleted?: boolean
 }
 
 export const STATUS_ORDER: TaskStatus[] = ['todo', 'inprogress', 'onhold', 'done']
