@@ -42,7 +42,7 @@
           @status-change="(id, st) => $emit('statusChange', id, st)"
           @priority-change="(id, p) => $emit('priorityChange', id, p)"
           @update="t => $emit('update', t)"
-          @touch-drag="(id, x, y, phase) => $emit('touchDrag', id, x, y, phase)"
+          @touch-drop="(id, date) => $emit('touchDrop', id, date)"
         />
       </TransitionGroup>
       <div v-if="dayTasks.length === 0" class="text-center text-gray-400 dark:text-gray-600 text-xs py-6 italic opacity-60">
@@ -80,7 +80,7 @@ const emit = defineEmits<{
   statusChange: [taskId: string, status: TaskStatus]
   priorityChange: [taskId: string, priority: TaskPriority]
   update: [task: Task]
-  touchDrag: [taskId: string, x: number, y: number, phase: 'start' | 'move' | 'end']
+  touchDrop: [taskId: string, date: string]
 }>()
 
 const tasksContainer = ref<HTMLElement>()

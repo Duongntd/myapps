@@ -29,7 +29,7 @@
         @status-change="(id, st) => store.changeStatus(id, st)"
         @priority-change="(id, p) => store.changePriority(id, p)"
         @update="t => store.updateTask(t)"
-        @touch-drag="onTouchDrag"
+        @touch-drop="onTouchDrop"
       />
     </div>
 
@@ -142,25 +142,8 @@ function onDrop(taskId: string, date: string, insertBeforeId?: string) {
   store.moveTask(taskId, date, insertBeforeId)
 }
 
-// Touch drag — simplified version
-let touchTaskId: string | null = null
-function onTouchDrag(taskId: string, x: number, y: number, phase: 'start' | 'move' | 'end') {
-  if (phase === 'start') {
-    touchTaskId = taskId
-  } else if (phase === 'end' && touchTaskId) {
-    // Find which column we're over
-    const columns = document.querySelectorAll('.day-column')
-    for (const col of columns) {
-      const rect = col.getBoundingClientRect()
-      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-        const date = (col as HTMLElement).dataset.date
-        if (date) {
-          store.moveTask(touchTaskId, date)
-        }
-        break
-      }
-    }
-    touchTaskId = null
-  }
+// Touch drop — card handles the drag visuals, we just move the task
+function onTouchDrop(taskId: string, date: string) {
+  store.moveTask(taskId, date)
 }
 </script>

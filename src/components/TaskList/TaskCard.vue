@@ -11,6 +11,9 @@
     draggable="true"
     @dragstart="onCardDragStart"
     @dragend="onDragEnd"
+    @touchstart="onTouchStart"
+    @touchmove="onTouchMove"
+    @touchend="onTouchEnd"
   >
     <div class="flex items-start justify-between gap-1.5">
       <!-- Priority dot -->
@@ -111,7 +114,7 @@ const emit = defineEmits<{
   statusChange: [taskId: string, status: TaskStatus]
   priorityChange: [taskId: string, priority: TaskPriority]
   update: [task: Task]
-  touchDrag: [taskId: string, x: number, y: number, phase: 'start' | 'move' | 'end']
+  touchDrop: [taskId: string, date: string]
 }>()
 
 const cardEl = ref<HTMLElement>()
@@ -229,13 +232,8 @@ function onDelete() {
   emit('delete', props.task.id)
 }
 
-// Drag — whole card is draggable, prevent on interactive children
+// Desktop drag
 function onCardDragStart(e: DragEvent) {
-  const target = e.target as HTMLElement
-  if (target.classList.contains('editable') || target.closest('.editable') || target.closest('.status-badge') || target.closest('.card-delete')) {
-    e.preventDefault()
-    return
-  }
   isDragging.value = true
   e.dataTransfer?.setData('text/plain', props.task.id)
   emit('dragStart', props.task.id, e)
@@ -244,6 +242,63 @@ function onCardDragStart(e: DragEvent) {
 function onDragEnd() {
   isDragging.value = false
   emit('dragEnd')
+}
+
+// Touch drag with 15px horizontal threshold
+let touchStartX = 0
+let touchClone: HTMLElement | null = null
+
+function onTouchStart(e: TouchEvent) {
+  touchStartX = e.touches[0].clientX
+}
+
+function onTouchMove(e: TouchEvent) {
+  const tx = e.touches[0].clientX
+  const ty = e.touches[0].clientY
+  const dx = Math.abs(tx - touchStartX)
+
+  if (!touchClone && dx > 15) {
+    e.preventDefault()
+    isDragging.value = true
+    touchClone = cardEl.value!.cloneNode(true) as HTMLElement
+    touchClone.style.position = 'fixed'
+    touchClone.style.width = cardEl.value!.offsetWidth + 'px'
+    touchClone.style.opacity = '0.8'
+    touchClone.style.pointerEvents = 'none'
+    touchClone.style.zIndex = '1000'
+    touchClone.style.transform = 'rotate(2deg)'
+    document.body.appendChild(touchClone)
+  }
+
+  if (touchClone) {
+    e.preventDefault()
+    touchClone.style.left = (tx - touchClone.offsetWidth / 2) + 'px'
+    touchClone.style.top = (ty - 20) + 'px'
+    document.querySelectorAll('.day-column').forEach(col => {
+      const r = col.getBoundingClientRect()
+      col.classList.toggle('drag-over', tx >= r.left && tx <= r.right && ty >= r.top && ty <= r.bottom)
+    })
+  }
+}
+
+function onTouchEnd(e: TouchEvent) {
+  isDragging.value = false
+  if (touchClone) {
+    touchClone.remove()
+    touchClone = null
+    const tx = e.changedTouches[0].clientX
+    const ty = e.changedTouches[0].clientY
+    document.querySelectorAll('.day-column').forEach(col => {
+      col.classList.remove('drag-over')
+      const r = col.getBoundingClientRect()
+      if (tx >= r.left && tx <= r.right && ty >= r.top && ty <= r.bottom) {
+        const date = (col as HTMLElement).dataset.date
+        if (date) {
+          emit('touchDrop', props.task.id, date)
+        }
+      }
+    })
+  }
 }
 
 // Close dropdown on outside click
