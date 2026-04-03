@@ -305,15 +305,14 @@ export const useTaskListStore = defineStore('taskList', () => {
   // ── Queries ──
   function tasksForDate(date: string): Task[] {
     return tasks.value
-      .filter(t => t.date === date && t.status !== 'done' && t.status !== 'onhold')
+      .filter(t => t.date === date && t.status !== 'onhold')
       .sort((a, b) => {
-        const order: Record<string, number> = { inprogress: 0, todo: 1 }
+        const order: Record<string, number> = { inprogress: 0, todo: 1, done: 2 }
         return (order[a.status] ?? 1) - (order[b.status] ?? 1)
       })
   }
 
   const onHoldTasks = computed(() => tasks.value.filter(t => t.status === 'onhold'))
-  const doneTasks = computed(() => tasks.value.filter(t => t.status === 'done'))
 
   return {
     tasks,
@@ -329,7 +328,6 @@ export const useTaskListStore = defineStore('taskList', () => {
     undo,
     tasksForDate,
     onHoldTasks,
-    doneTasks,
     todayStr
   }
 })

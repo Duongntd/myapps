@@ -11,7 +11,7 @@
     <!-- Grid -->
     <div
       class="grid gap-2.5 mb-5"
-      :class="isMobile ? 'flex overflow-x-auto snap-x snap-mandatory pb-2 -mx-3 px-3' : 'grid-cols-7'"
+      :class="isTablet ? 'flex overflow-x-auto snap-x snap-mandatory pb-2 -mx-3 px-3' : 'grid-cols-7'"
     >
       <DayColumn
         v-for="date in weekDates"
@@ -19,8 +19,8 @@
         :date="date"
         :day-tasks="store.tasksForDate(date)"
         :is-today="date === today"
-        :is-mobile="isMobile"
-        :style="isMobile && date === today ? { order: -1 } : {}"
+        :is-mobile="isTablet"
+        :style="isTablet && date === today ? { order: -1 } : {}"
         @add-task="d => store.addTask(d)"
         @drop="onDrop"
         @drag-start="onDragStart"
@@ -39,7 +39,7 @@
         <span class="w-[7px] h-[7px] rounded-full bg-orange-500"></span> On Hold
       </div>
       <div class="flex flex-wrap gap-2" :class="{ 'flex-col': isMobile }">
-        <div v-for="task in store.onHoldTasks" :key="task.id" :class="isMobile ? 'w-full' : 'w-60'">
+        <div v-for="task in store.onHoldTasks" :key="task.id" :class="isMobile ? 'w-full' : 'w-60'" class="flex-shrink-0">
           <TaskCard
             :task="task"
             @delete="id => store.deleteTask(id)"
@@ -51,23 +51,6 @@
       </div>
     </div>
 
-    <!-- Done section -->
-    <div v-if="store.doneTasks.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-      <div class="text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400 mb-2 flex items-center gap-1.5">
-        <span class="w-[7px] h-[7px] rounded-full bg-green-500"></span> Done
-      </div>
-      <div class="flex flex-wrap gap-2" :class="{ 'flex-col': isMobile }">
-        <div v-for="task in store.doneTasks" :key="task.id" :class="isMobile ? 'w-full' : 'w-60'" class="opacity-55">
-          <TaskCard
-            :task="task"
-            @delete="id => store.deleteTask(id)"
-            @status-change="(id, st) => store.changeStatus(id, st)"
-            @priority-change="(id, p) => store.changePriority(id, p)"
-            @update="t => store.updateTask(t)"
-          />
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -81,9 +64,11 @@ const store = useTaskListStore()
 
 const currentMonday = ref(getMonday(new Date()))
 const isMobile = ref(false)
+const isTablet = ref(false)
 
 function checkMobile() {
   isMobile.value = window.innerWidth < 768
+  isTablet.value = window.innerWidth <= 1024
 }
 
 onMounted(() => {

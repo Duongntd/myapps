@@ -102,7 +102,7 @@ const dayNum = computed(() => dateObj.value.getDate())
 const activeCount = computed(() => props.dayTasks.length)
 
 const columnStyle = computed(() => {
-  if (props.isMobile) return { minWidth: '260px', flexShrink: 0, scrollSnapAlign: 'start' }
+  if (props.isMobile) return { minWidth: '220px', flexShrink: 0, scrollSnapAlign: 'start' }
   return { minHeight: '200px' }
 })
 
