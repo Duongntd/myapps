@@ -23,6 +23,10 @@
     "welcome": "Welcome to MyApps",
     "subtitle": "A collection of useful applications"
   },
+  "taskList": {
+    "title": "Task List",
+    "subtitle": "Plan your week, track your tasks"
+  },
   "readTracker": {
     "title": "📚 Read Tracker",
     "subtitle": "Track your reading time and build better reading habits",
@@ -118,6 +122,11 @@
     "portfolioTracker": {
       "name": "Portfolio Tracker",
       "description": "Manage your stock portfolio, track live prices, and monitor your investment performance.",
+      "openApp": "Open App"
+    },
+    "taskList": {
+      "name": "Task List",
+      "description": "Plan your week with a visual task board. Drag, drop, and track progress.",
       "openApp": "Open App"
     },
     "signIn": {

@@ -21,6 +21,6 @@ describe('Home', () => {
   it('shows Open App buttons for each app', async () => {
     const { findAllByRole } = renderWithProviders(Home)
     const buttons = await findAllByRole('button', { name: /open app/i })
-    expect(buttons.length).toBe(2)
+    expect(buttons.length).toBe(3)
   })
 })

@@ -23,6 +23,10 @@
     "welcome": "Chào mừng đến với MyApps",
     "subtitle": "Bộ sưu tập các ứng dụng hữu ích"
   },
+  "taskList": {
+    "title": "Danh sách công việc",
+    "subtitle": "Lên kế hoạch tuần, theo dõi công việc"
+  },
   "readTracker": {
     "title": "📚 Read Tracker",
     "subtitle": "Theo dõi thời gian đọc sách và xây dựng thói quen đọc tốt hơn",
@@ -118,6 +122,11 @@
     "portfolioTracker": {
       "name": "Portfolio Tracker",
       "description": "Quản lý danh mục cổ phiếu, theo dõi giá trực tiếp và giám sát hiệu suất đầu tư của bạn.",
+      "openApp": "Mở ứng dụng"
+    },
+    "taskList": {
+      "name": "Danh sách công việc",
+      "description": "Lên kế hoạch tuần với bảng công việc trực quan. Kéo, thả và theo dõi tiến độ.",
       "openApp": "Mở ứng dụng"
     },
     "signIn": {
