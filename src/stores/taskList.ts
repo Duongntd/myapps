@@ -5,12 +5,12 @@ import { db } from '@/firebase/config'
 import {
   collection,
   doc,
-  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
   query,
   orderBy,
+  onSnapshot,
   Timestamp,
   writeBatch
 } from 'firebase/firestore'
@@ -31,6 +31,7 @@ export const useTaskListStore = defineStore('taskList', () => {
   const tasks = ref<Task[]>([])
   const loading = ref(false)
   const undoStack = ref<UndoEntry[]>([])
+  let unsubscribe: (() => void) | null = null
 
   const userId = computed(() => authStore.user?.uid ?? null)
   const isLocal = computed(() => authStore.localMode)
@@ -81,11 +82,10 @@ export const useTaskListStore = defineStore('taskList', () => {
   }
 
   // ── Firestore ──
-  async function loadFromFirestore() {
+  function subscribeToFirestore() {
     loading.value = true
-    try {
-      const q = query(getCollection(), orderBy('createdAt', 'desc'))
-      const snapshot = await getDocs(q)
+    const q = query(getCollection(), orderBy('createdAt', 'desc'))
+    unsubscribe = onSnapshot(q, (snapshot) => {
       tasks.value = snapshot.docs
         .filter(d => !d.data()._deleted)
         .map(d => {
@@ -106,9 +106,14 @@ export const useTaskListStore = defineStore('taskList', () => {
             notes: data.notes ?? undefined,
           } as Task
         })
-    } finally {
       loading.value = false
-    }
+      const movedTasks = carryForward()
+      if (movedTasks.length > 0) saveTasks(movedTasks)
+    })
+  }
+
+  function cleanup() {
+    if (unsubscribe) { unsubscribe(); unsubscribe = null }
   }
 
   async function saveTaskToFirestore(task: Task) {
@@ -131,12 +136,13 @@ export const useTaskListStore = defineStore('taskList', () => {
   async function load() {
     if (isLocal.value) {
       loadLocal()
+      const movedTasks = carryForward()
+      if (movedTasks.length > 0) {
+        await saveTasks(movedTasks)
+      }
     } else {
-      await loadFromFirestore()
-    }
-    const movedTasks = carryForward()
-    if (movedTasks.length > 0) {
-      await saveTasks(movedTasks)
+      cleanup()
+      subscribeToFirestore()
     }
   }
 
@@ -355,6 +361,7 @@ export const useTaskListStore = defineStore('taskList', () => {
     loading,
     undoStack,
     load,
+    cleanup,
     addTask,
     updateTask,
     deleteTask,
