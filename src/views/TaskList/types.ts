@@ -12,6 +12,11 @@ export interface Task {
   createdAt?: string
   updatedAt?: string
   _deleted?: boolean
+  // Agent task board fields
+  source?: string       // 'evelynn' | 'duong' | undefined
+  updatedBy?: string    // 'evelynn' | 'duong' | undefined
+  category?: string
+  notes?: string
 }
 
 export const STATUS_ORDER: TaskStatus[] = ['todo', 'inprogress', 'onhold', 'done']
