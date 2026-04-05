@@ -43,15 +43,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import LocalModeWarning from '@/components/common/LocalModeWarning.vue'
 import UndoToast from '@/components/TaskList/UndoToast.vue'
+import { useTaskListStore } from '@/stores/taskList'
 
 const route = useRoute()
 const isCalendar = computed(() => route.name === 'task-list-dashboard')
 const isBoard = computed(() => route.name === 'task-list-board')
 
+const store = useTaskListStore()
 const isDark = ref(false)
 
 function toggleDark() {
@@ -66,5 +68,10 @@ onMounted(() => {
     isDark.value = true
     document.documentElement.classList.add('dark')
   }
+  store.load()
+})
+
+onUnmounted(() => {
+  store.cleanup()
 })
 </script>

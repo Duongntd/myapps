@@ -8,17 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
 import { useTaskListStore } from '@/stores/taskList'
 import WeekGrid from '@/components/TaskList/WeekGrid.vue'
 
 const store = useTaskListStore()
-
-onMounted(() => {
-  store.load()
-})
-
-onUnmounted(() => {
-  store.cleanup()
-})
 </script>

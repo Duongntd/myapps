@@ -48,7 +48,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { useTaskListStore } from '@/stores/taskList'
 import BoardCard from '@/components/TaskList/BoardCard.vue'
 import type { TaskStatus } from './types'
@@ -62,11 +61,6 @@ const columns: { status: TaskStatus; label: string; dotClass: string }[] = [
   { status: 'done', label: 'Done', dotClass: 'bg-green-500' },
 ]
 
-onMounted(() => {
-  if (store.tasks.length === 0) {
-    store.load()
-  }
-})
 
 function tasksByStatus(status: string) {
   return store.tasksForStatus(status)
