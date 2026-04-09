@@ -5,12 +5,12 @@ import { db } from '@/firebase/config'
 import {
   collection,
   doc,
-  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
   query,
   orderBy,
+  onSnapshot,
   Timestamp,
   writeBatch
 } from 'firebase/firestore'
@@ -31,6 +31,7 @@ export const useTaskListStore = defineStore('taskList', () => {
   const tasks = ref<Task[]>([])
   const loading = ref(false)
   const undoStack = ref<UndoEntry[]>([])
+  let unsubscribe: (() => void) | null = null
 
   const userId = computed(() => authStore.user?.uid ?? null)
   const isLocal = computed(() => authStore.localMode)
@@ -81,11 +82,10 @@ export const useTaskListStore = defineStore('taskList', () => {
   }
 
   // ── Firestore ──
-  async function loadFromFirestore() {
+  function subscribeToFirestore() {
     loading.value = true
-    try {
-      const q = query(getCollection(), orderBy('createdAt', 'desc'))
-      const snapshot = await getDocs(q)
+    const q = query(getCollection(), orderBy('createdAt', 'desc'))
+    unsubscribe = onSnapshot(q, (snapshot) => {
       tasks.value = snapshot.docs
         .filter(d => !d.data()._deleted)
         .map(d => {
@@ -99,12 +99,21 @@ export const useTaskListStore = defineStore('taskList', () => {
             date: data.date ?? todayStr(),
             tag: data.tag ?? false,
             createdAt: data.createdAt?.toDate?.()?.toISOString?.() ?? undefined,
-            updatedAt: data.updatedAt?.toDate?.()?.toISOString?.() ?? undefined
+            updatedAt: data.updatedAt?.toDate?.()?.toISOString?.() ?? undefined,
+            source: data.source ?? undefined,
+            updatedBy: data.updatedBy ?? undefined,
+            category: data.category ?? undefined,
+            notes: data.notes ?? undefined,
           } as Task
         })
-    } finally {
       loading.value = false
-    }
+      const movedTasks = carryForward()
+      if (movedTasks.length > 0) saveTasks(movedTasks)
+    })
+  }
+
+  function cleanup() {
+    if (unsubscribe) { unsubscribe(); unsubscribe = null }
   }
 
   async function saveTaskToFirestore(task: Task) {
@@ -117,7 +126,8 @@ export const useTaskListStore = defineStore('taskList', () => {
       date: task.date,
       tag: task.tag,
       _deleted: task._deleted ?? false,
-      updatedAt: Timestamp.now()
+      updatedAt: Timestamp.now(),
+      updatedBy: 'duong',
     })
   }
 
@@ -126,12 +136,13 @@ export const useTaskListStore = defineStore('taskList', () => {
   async function load() {
     if (isLocal.value) {
       loadLocal()
+      const movedTasks = carryForward()
+      if (movedTasks.length > 0) {
+        await saveTasks(movedTasks)
+      }
     } else {
-      await loadFromFirestore()
-    }
-    const movedTasks = carryForward()
-    if (movedTasks.length > 0) {
-      await saveTasks(movedTasks)
+      cleanup()
+      subscribeToFirestore()
     }
   }
 
@@ -174,7 +185,9 @@ export const useTaskListStore = defineStore('taskList', () => {
         date: newTask.date,
         tag: newTask.tag,
         createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
+        updatedBy: 'duong',
+        source: 'duong',
       })
       newTask.id = docRef.id
       tasks.value.push(newTask)
@@ -334,11 +347,21 @@ export const useTaskListStore = defineStore('taskList', () => {
 
   const onHoldTasks = computed(() => tasks.value.filter(t => !t._deleted && t.status === 'onhold'))
 
+  function tasksForStatus(status: string): Task[] {
+    return tasks.value
+      .filter(t => !t._deleted && t.status === status)
+      .sort((a, b) => {
+        const order: Record<string, number> = { high: 0, medium: 1, low: 2 }
+        return (order[a.priority] ?? 1) - (order[b.priority] ?? 1)
+      })
+  }
+
   return {
     tasks,
     loading,
     undoStack,
     load,
+    cleanup,
     addTask,
     updateTask,
     deleteTask,
@@ -347,6 +370,7 @@ export const useTaskListStore = defineStore('taskList', () => {
     moveTask,
     undo,
     tasksForDate,
+    tasksForStatus,
     onHoldTasks,
     todayStr
   }

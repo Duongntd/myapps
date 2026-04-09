@@ -100,6 +100,11 @@ const routes: RouteRecordRaw[] = [
         path: 'dashboard',
         name: 'task-list-dashboard',
         component: () => import('@/views/TaskList/Dashboard.vue')
+      },
+      {
+        path: 'board',
+        name: 'task-list-board',
+        component: () => import('@/views/TaskList/BoardView.vue')
       }
     ]
   }
